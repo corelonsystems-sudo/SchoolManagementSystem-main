@@ -107,14 +107,11 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
-APPS_DIR = ROOT_DIR / "backend"  # Main Django App Folder Name
-
-STATIC_ROOT = str(ROOT_DIR / "staticfiles")
+STATIC_ROOT = str(BASE_DIR / "staticfiles")
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    str(APPS_DIR / "static"),
+    str(BASE_DIR / "static"),
 ]
 
 STATICFILES_FINDERS = [
