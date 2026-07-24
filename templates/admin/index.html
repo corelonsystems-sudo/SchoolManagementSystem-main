@@ -1,0 +1,891 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+{% get_admin_log 10 as admin_log for_user user %}
+
+<style>
+    .dashboard-wrap {
+        display: grid;
+        gap: 24px;
+    }
+
+    .dashboard-hero {
+        background: linear-gradient(135deg, #1c4a7a 0%, #163a5f 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 14px 40px rgba(15, 43, 71, 0.18);
+    }
+
+    .dashboard-hero h1 {
+        margin: 0 0 8px 0;
+        font-size: 30px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .dashboard-hero p {
+        margin: 0;
+        max-width: 760px;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .dashboard-actions {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .dashboard-actions a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .dashboard-actions a:hover {
+        background: rgba(255, 255, 255, 0.18);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .stat-card,
+    .dashboard-panel,
+    .app-card {
+        background: #fff;
+        border: 1px solid #d9e1ea;
+        border-radius: 14px;
+        box-shadow: 0 8px 22px rgba(20, 40, 70, 0.06);
+    }
+
+    .stat-card {
+        padding: 18px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1c4a7a;
+        line-height: 1;
+    }
+
+    .stat-subtitle {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #2d4f73;
+    }
+
+    .dashboard-panel {
+        padding: 18px;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 7fr 3fr;
+        gap: 16px;
+    }
+
+    .stats-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border-bottom: 2px solid #edf2f7;
+    }
+
+    .stats-tab {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        transition: color 0.2s, border-color 0.2s;
+    }
+
+    .stats-tab:hover {
+        color: #1c4a7a;
+    }
+
+    .stats-tab.active {
+        color: #1c4a7a;
+        border-bottom-color: #1c4a7a;
+    }
+
+    .stats-tab-content {
+        display: none;
+    }
+
+    .stats-tab-content.active {
+        display: block;
+    }
+
+    .tab-body {
+        display: grid;
+        grid-template-columns: 8fr 2fr;
+        gap: 16px;
+    }
+
+    .summary-card {
+        background: #f8fafc;
+        border: 1px solid #d9e1ea;
+        border-radius: 10px;
+        padding: 14px;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .summary-card h4 {
+        margin: 0 0 10px 0;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #2d4f73;
+    }
+
+    .summary-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .summary-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 12px;
+    }
+
+    .summary-list li:last-child {
+        border-bottom: 0;
+    }
+
+    .summary-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .summary-value {
+        font-weight: 700;
+        color: #1c4a7a;
+    }
+
+    .summary-total {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 2px solid #d9e1ea;
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1c4a7a;
+    }
+
+    .chart-card {
+        background: #fff;
+        border: 1px solid #d9e1ea;
+        border-radius: 14px;
+        box-shadow: 0 8px 22px rgba(20, 40, 70, 0.06);
+        padding: 18px;
+    }
+
+    .chart-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #2d4f73;
+        margin-bottom: 12px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 280px;
+    }
+
+    .chart-container-small {
+        position: relative;
+        height: 280px;
+    }
+
+    .filters-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-group label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .filter-group select {
+        padding: 6px 10px;
+        border: 1px solid #d9e1ea;
+        border-radius: 6px;
+        font-size: 12px;
+        background: #fff;
+        color: #1c4a7a;
+        min-width: 120px;
+    }
+
+    .filter-group select:focus {
+        outline: none;
+        border-color: #1c4a7a;
+    }
+
+    .recent-table-wrap {
+        overflow-x: auto;
+    }
+
+    .recent-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .recent-table thead th {
+        text-align: left;
+        padding: 8px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        border-bottom: 1px solid #d9e1ea;
+        white-space: nowrap;
+    }
+
+    .recent-table tbody td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #edf2f7;
+        vertical-align: top;
+    }
+
+    .recent-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .recent-time {
+        white-space: nowrap;
+        color: #64748b;
+        font-size: 11px;
+    }
+
+    .recent-object {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1c2b3a;
+        line-height: 1.2;
+        margin-bottom: 2px;
+    }
+
+    .recent-action {
+        font-size: 11px;
+        color: #2d4f73;
+        line-height: 1.2;
+    }
+
+    .recent-user {
+        white-space: nowrap;
+        color: #64748b;
+        font-size: 11px;
+        text-align: right;
+    }
+
+    .empty-state {
+        padding: 12px 0 4px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-hero {
+            padding: 22px;
+        }
+
+        .dashboard-hero h1 {
+            font-size: 24px;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tab-body {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-wrap">
+    <div class="dashboard-hero">
+        <h1>{% translate 'Welcome back' %}, {{ user.get_username|default:user }}.</h1>
+        <p>
+            {% translate 'This is your custom system dashboard. Use the quick links below to manage records, monitor activity, and navigate the school management system with the system color palette.' %}
+        </p>
+        <div class="dashboard-actions">
+            <a href="{% url 'admin:index' %}">{% translate 'Dashboard' %}</a>
+            <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a>
+            <a href="{% url 'admin:logout' %}">{% translate 'Log out' %}</a>
+            <a href="/">{% translate 'Return to site' %}</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Active Students' %}</div>
+            <div class="stat-value">{{ stats_enrolled }}</div>
+            <div class="stat-subtitle">{% translate 'Currently enrolled' %}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Graduated' %}</div>
+            <div class="stat-value">{{ stats_completed }}</div>
+            <div class="stat-subtitle">{% translate 'Completed studies' %}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Withdrawn' %}</div>
+            <div class="stat-value">{{ stats_withdrawn }}</div>
+            <div class="stat-subtitle">{% translate 'Dropped out' %}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Deferred' %}</div>
+            <div class="stat-value">{{ stats_deferred }}</div>
+            <div class="stat-subtitle">{% translate 'Deferred enrollment' %}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Pending' %}</div>
+            <div class="stat-value">{{ stats_pending }}</div>
+            <div class="stat-subtitle">{% translate 'Awaiting enrollment' %}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% translate 'Total Students' %}</div>
+            <div class="stat-value">{{ stats_total_students }}</div>
+            <div class="stat-subtitle">{% translate 'All records' %}</div>
+        </div>
+    </div>
+
+    <div class="dashboard-panel">
+        <div class="section-title">
+            <span>{% translate 'Student Statistics' %}</span>
+        </div>
+
+        <!-- Tab navigation -->
+        <div class="stats-tabs">
+            <a href="#" class="stats-tab active" data-tab="intake">{% translate 'By Intake' %}</a>
+            <a href="#" class="stats-tab" data-tab="course">{% translate 'By Course' %}</a>
+            <a href="#" class="stats-tab" data-tab="year">{% translate 'By Academic Year' %}</a>
+            <a href="#" class="stats-tab" data-tab="gender">{% translate 'By Gender' %}</a>
+            <a href="#" class="stats-tab" data-tab="status">{% translate 'By Status' %}</a>
+        </div>
+
+        <!-- Intake tab -->
+        <div class="stats-tab-content active" data-tab-content="intake">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-intake">{% translate 'Intake' %}:</label>
+                    <select id="filter-intake" data-param="intake">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-intake-course">{% translate 'Course' %}:</label>
+                    <select id="filter-intake-course" data-param="course">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-intake-gender">{% translate 'Gender' %}:</label>
+                    <select id="filter-intake-gender" data-param="gender">
+                        <option value="">{% translate 'All' %}</option>
+                        <option value="M">{% translate 'Male' %}</option>
+                        <option value="F">{% translate 'Female' %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="chart-intake"></canvas>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>{% translate 'Summary' %}</h4>
+                    <ul class="summary-list" id="summary-intake"></ul>
+                    <div class="summary-total" id="summary-total-intake"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course tab -->
+        <div class="stats-tab-content" data-tab-content="course" style="display:none;">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-course">{% translate 'Course' %}:</label>
+                    <select id="filter-course" data-param="course">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-course-intake">{% translate 'Intake' %}:</label>
+                    <select id="filter-course-intake" data-param="intake">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-course-gender">{% translate 'Gender' %}:</label>
+                    <select id="filter-course-gender" data-param="gender">
+                        <option value="">{% translate 'All' %}</option>
+                        <option value="M">{% translate 'Male' %}</option>
+                        <option value="F">{% translate 'Female' %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="chart-course"></canvas>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>{% translate 'Summary' %}</h4>
+                    <ul class="summary-list" id="summary-course"></ul>
+                    <div class="summary-total" id="summary-total-course"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Year tab -->
+        <div class="stats-tab-content" data-tab-content="year" style="display:none;">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-year">{% translate 'Academic Year' %}:</label>
+                    <select id="filter-year" data-param="year">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-year-course">{% translate 'Course' %}:</label>
+                    <select id="filter-year-course" data-param="course">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-year-gender">{% translate 'Gender' %}:</label>
+                    <select id="filter-year-gender" data-param="gender">
+                        <option value="">{% translate 'All' %}</option>
+                        <option value="M">{% translate 'Male' %}</option>
+                        <option value="F">{% translate 'Female' %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="chart-year"></canvas>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>{% translate 'Summary' %}</h4>
+                    <ul class="summary-list" id="summary-year"></ul>
+                    <div class="summary-total" id="summary-total-year"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender tab -->
+        <div class="stats-tab-content" data-tab-content="gender" style="display:none;">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-gender">{% translate 'Gender' %}:</label>
+                    <select id="filter-gender" data-param="gender">
+                        <option value="">{% translate 'All' %}</option>
+                        <option value="M">{% translate 'Male' %}</option>
+                        <option value="F">{% translate 'Female' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-gender-intake">{% translate 'Intake' %}:</label>
+                    <select id="filter-gender-intake" data-param="intake">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-gender-course">{% translate 'Course' %}:</label>
+                    <select id="filter-gender-course" data-param="course">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="chart-gender"></canvas>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>{% translate 'Summary' %}</h4>
+                    <ul class="summary-list" id="summary-gender"></ul>
+                    <div class="summary-total" id="summary-total-gender"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status tab -->
+        <div class="stats-tab-content" data-tab-content="status" style="display:none;">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-status-intake">{% translate 'Intake' %}:</label>
+                    <select id="filter-status-intake" data-param="intake">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status-course">{% translate 'Course' %}:</label>
+                    <select id="filter-status-course" data-param="course">
+                        <option value="">{% translate 'All' %}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status-gender">{% translate 'Gender' %}:</label>
+                    <select id="filter-status-gender" data-param="gender">
+                        <option value="">{% translate 'All' %}</option>
+                        <option value="M">{% translate 'Male' %}</option>
+                        <option value="F">{% translate 'Female' %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="chart-status"></canvas>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>{% translate 'Summary' %}</h4>
+                    <ul class="summary-list" id="summary-status"></ul>
+                    <div class="summary-total" id="summary-total-status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-panel">
+        <div class="section-title">
+            <span>{% translate 'Recent activity' %}</span>
+        </div>
+        {% if admin_log %}
+            <div class="recent-table-wrap">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>{% translate 'Time' %}</th>
+                            <th>{% translate 'Activity' %}</th>
+                            <th>{% translate 'Action' %}</th>
+                            <th>{% translate 'User' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in admin_log %}
+                            <tr>
+                                <td class="recent-time">{{ entry.action_time|date:"M j, Y · H:i" }}</td>
+                                <td>
+                                    <div class="recent-object">{{ entry.object_repr }}</div>
+                                    <div class="recent-action">
+                                        {% if entry.is_addition %}
+                                            {% translate 'Added' %}
+                                        {% elif entry.is_change %}
+                                            {% translate 'Changed' %}
+                                        {% elif entry.is_deletion %}
+                                            {% translate 'Deleted' %}
+                                        {% else %}
+                                            {% translate 'Action' %}
+                                        {% endif %}
+                                        — {{ entry.content_type.name }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if entry.is_addition %}
+                                        {% translate 'Added' %}
+                                    {% elif entry.is_change %}
+                                        {% translate 'Changed' %}
+                                    {% elif entry.is_deletion %}
+                                        {% translate 'Deleted' %}
+                                    {% else %}
+                                        {% translate 'Action' %}
+                                    {% endif %}
+                                </td>
+                                <td class="recent-user">{{ entry.user.get_username }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">{% translate 'No recent activity yet.' %}</div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let charts = {};
+        let currentTab = 'intake';
+
+        const barColors = ['#1c4a7a', '#47bac1', '#639af5', '#163a5f', '#8bb8e8', '#2d6db5', '#5a9fd4', '#3a7ab5', '#1a5276', '#4a90c2'];
+        const pieColors = ['#1c4a7a', '#47bac1', '#639af5', '#163a5f', '#8bb8e8', '#2d6db5', '#5a9fd4', '#3a7ab5'];
+
+        const tabConfig = {
+            intake:  { statsKey: 'intake_stats',  chartType: 'bar',      colors: barColors,                         legend: false },
+            course:  { statsKey: 'course_stats',  chartType: 'bar',      colors: barColors,                         legend: false },
+            year:    { statsKey: 'year_stats',    chartType: 'bar',      colors: barColors,                         legend: false },
+            gender:  { statsKey: 'gender_stats',  chartType: 'doughnut', colors: ['#1c4a7a', '#47bac1', '#8bb8e8'],  legend: true  },
+            status:  { statsKey: 'status_stats',  chartType: 'pie',      colors: pieColors,                         legend: true  },
+        };
+
+        // Populate all selects from database data
+        function populateSelects(data) {
+            // Find all selects with data-param="intake" and populate (include status)
+            document.querySelectorAll('select[data-param="intake"]').forEach(sel => {
+                while (sel.options.length > 1) sel.remove(1);
+                data.intakes.forEach(i => {
+                    const opt = document.createElement('option');
+                    opt.value = i.id;
+                    opt.textContent = i.name + (i.status ? ' (' + i.status + ')' : '');
+                    sel.appendChild(opt);
+                });
+            });
+
+            // Course selects
+            document.querySelectorAll('select[data-param="course"]').forEach(sel => {
+                while (sel.options.length > 1) sel.remove(1);
+                data.courses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            });
+
+            // Year selects
+            document.querySelectorAll('select[data-param="year"]').forEach(sel => {
+                while (sel.options.length > 1) sel.remove(1);
+                data.years.forEach(y => {
+                    const opt = document.createElement('option');
+                    opt.value = y.id;
+                    opt.textContent = y.year;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        // Build filter params from the selects within a tab
+        function getFilterParams(tab) {
+            const params = new URLSearchParams();
+            const tabContent = document.querySelector('[data-tab-content="' + tab + '"]');
+            if (!tabContent) return params;
+
+            tabContent.querySelectorAll('select[data-param]').forEach(sel => {
+                if (sel.value) {
+                    params.append(sel.dataset.param, sel.value);
+                }
+            });
+
+            return params;
+        }
+
+        // Fetch data and render chart + summary for a tab
+        function fetchAndRender(tab) {
+            const params = getFilterParams(tab);
+            fetch('/admin/dashboard-stats/?' + params.toString())
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    renderChart(tab, data);
+                    renderSummary(tab, data);
+                })
+                .catch(err => console.error('Fetch error for tab ' + tab + ':', err));
+        }
+
+        // Render chart
+        function renderChart(tab, data) {
+            const cfg = tabConfig[tab];
+            if (!cfg) return;
+
+            const canvas = document.getElementById('chart-' + tab);
+            if (!canvas) return;
+
+            if (charts[tab]) charts[tab].destroy();
+
+            const stats = data[cfg.statsKey];
+            const isBar = cfg.chartType === 'bar';
+
+            const chartConfig = {
+                type: cfg.chartType,
+                data: {
+                    labels: stats.labels,
+                    datasets: [{
+                        label: 'Students',
+                        data: stats.data,
+                        backgroundColor: cfg.colors.slice(0, stats.labels.length),
+                        borderRadius: isBar ? 6 : 0,
+                        borderSkipped: false,
+                        borderWidth: isBar ? 0 : 2,
+                        borderColor: isBar ? undefined : '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: cfg.legend,
+                            position: 'bottom',
+                            labels: { padding: 15, usePointStyle: true, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            backgroundColor: '#163a5f',
+                            padding: 12,
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 }
+                        }
+                    }
+                }
+            };
+
+            if (isBar) {
+                chartConfig.options.scales = {
+                    y: { beginAtZero: true, ticks: { font: { size: 11 }, color: '#64748b' }, grid: { color: '#edf2f7' } },
+                    x: { ticks: { font: { size: 11 }, color: '#64748b' }, grid: { display: false } }
+                };
+            }
+
+            charts[tab] = new Chart(canvas.getContext('2d'), chartConfig);
+        }
+
+        // Render summary list + total
+        function renderSummary(tab, data) {
+            const cfg = tabConfig[tab];
+            if (!cfg) return;
+
+            const stats = data[cfg.statsKey];
+            const listEl = document.getElementById('summary-' + tab);
+            const totalEl = document.getElementById('summary-total-' + tab);
+            if (!listEl || !totalEl) return;
+
+            listEl.innerHTML = '';
+            let total = 0;
+
+            stats.labels.forEach((label, i) => {
+                const value = stats.data[i];
+                total += value;
+                const li = document.createElement('li');
+                li.innerHTML = '<span class="summary-label">' + label + '</span><span class="summary-value">' + value + '</span>';
+                listEl.appendChild(li);
+            });
+
+            totalEl.innerHTML = '<span>Total</span><span>' + total + '</span>';
+        }
+
+        // Tab switching
+        document.querySelectorAll('.stats-tab').forEach(tabLink => {
+            tabLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const tab = this.dataset.tab;
+                currentTab = tab;
+                document.querySelectorAll('.stats-tab-content').forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+                const content = document.querySelector('[data-tab-content="' + tab + '"]');
+                content.classList.add('active');
+                content.style.display = 'block';
+
+                fetchAndRender(tab);
+            });
+        });
+
+        // Filter change listeners on all selects in all tabs
+        document.querySelectorAll('.stats-tab-content select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const tabContent = this.closest('.stats-tab-content');
+                if (tabContent) {
+                    fetchAndRender(tabContent.dataset.tabContent);
+                }
+            });
+        });
+
+        // Initial load
+        fetch('/admin/dashboard-stats/')
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                populateSelects(data);
+                renderChart('intake', data);
+                renderSummary('intake', data);
+            })
+            .catch(err => console.error('Initial dashboard stats fetch error:', err));
+    });
+</script>
+{% endblock %}

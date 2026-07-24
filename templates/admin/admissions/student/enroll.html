@@ -1,0 +1,155 @@
+{% load i18n admin_urls static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            padding: 20px;
+        }
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1c4a7a;
+            /* border-bottom: 2px solid #1c4a7a; */
+            padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #1c4a7a;
+            border-radius: 4px;
+        }
+        .student-info > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .student-info label {
+            font-weight: 600;
+            font-size: 11px;
+            color: #b8d4e8;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .student-info p {
+            font-size: 13px;
+            color: #ffffff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #49617e;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9e1ea;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .submit-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1c4a7a;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #2a5d96;
+        }
+        .button-cancel {
+            background: #6c757d;
+        }
+        .button-cancel:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <h2>{{ title }}</h2>
+    
+    <div class="student-info">
+        <div>
+            <label>Student Name:</label>
+            <p>{{ student.first_name }} {{ student.last_name }}</p>
+        </div>
+        <div>
+            <label>Admission Number:</label>
+            <p>{{ student.admission_number }}</p>
+        </div>
+        <div>
+            <label>Course:</label>
+            <p>{{ student.course }}</p>
+        </div>
+        <div>
+            <label>Year of Admission:</label>
+            <p>{{ student.year_of_admission }}</p>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'admin:enroll_student_submit' student.id %}">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group">
+                <label for="study_year">Study Year:</label>
+                <select name="study_year" id="study_year" required>
+                    <option value="">Select Study Year</option>
+                    {% for year in study_years %}
+                    <option value="{{ year.id }}">{{ year.year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="semester">Semester:</label>
+                <select name="semester" id="semester" required>
+                    <option value="">Select Semester</option>
+                    {% for sem in semesters %}
+                    <option value="{{ sem.id }}">{{ sem.semester }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <button type="submit" class="button">Enroll Student</button>
+            <button type="button" onclick="window.parent.KIHSAdminModal.close()" class="button button-cancel">Cancel</button>
+        </div>
+    </form>
+</body>
+</html>

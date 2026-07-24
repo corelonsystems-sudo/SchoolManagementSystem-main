@@ -1,0 +1,50 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .permissions-by-app {
+        margin-top: 10px;
+    }
+    .app-permissions-group {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+    }
+    .app-permissions-group h4 {
+        margin: 0 0 10px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1c4a7a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .app-permissions-group .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 5px;
+    }
+    .app-permissions-group label {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        margin: 0;
+        cursor: pointer;
+    }
+    .app-permissions-group input[type="checkbox"] {
+        margin-right: 8px;
+    }
+    .app-permissions-group label:hover {
+        background: #e9ecef;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+{{ block.super }}
+{% endblock %}

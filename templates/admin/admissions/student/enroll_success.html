@@ -1,0 +1,54 @@
+{% load i18n admin_urls static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Enrollment Success</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .success-message {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {% if success %}
+    <div class="success-icon">✓</div>
+    <div class="success-message">{{ message }}</div>
+    {% endif %}
+    
+    <script>
+    setTimeout(function() {
+        if (window.parent && window.parent.KIHSAdminModal) {
+            window.parent.KIHSAdminModal.close();
+        }
+    }, 1500);
+    </script>
+</body>
+</html>

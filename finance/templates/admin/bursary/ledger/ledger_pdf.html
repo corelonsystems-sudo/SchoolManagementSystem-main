@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        body { font-family: Arial, sans-serif; font-size: 10px; color: #111; line-height: 1.15; }
+        .muted { color: #00257a; font-size: 9px; }
+        .section-title { font-weight: 700; font-size: 11px; color: #001a66; letter-spacing: 0.3px; }
+        .divider { border-bottom: 1px solid #f7c6d0; margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d1d5db; padding: 3px 6px; vertical-align: middle; }
+        th { background: #001a66; color: #ffffff; font-weight: 700; font-size: 9px; padding: 4px 6px; }
+        .right { text-align: right; }
+        .no-border td { border: none; padding: 1px 0; }
+        .photo { width: 118px; height: 118px; border: 1px solid #e5e7eb; }
+        .label { color: #00257a; font-weight: 700; }
+        .summary-label { text-align: right; color: #001a66; font-weight: 700; background: #f7c6d0; }
+        .summary-value { text-align: right; background: #f7c6d0; }
+        .mt-3 { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <table class="no-border" style="width: 100%;">
+        <tr>
+            <td style="width: 120px;">
+                {% if passport_photo_url %}
+                    <img class="photo" src="{{ passport_photo_url }}" />
+                {% else %}
+                    <div class="photo"></div>
+                {% endif %}
+            </td>
+            <td>
+                <div class="section-title">STUDENT DETAILS</div>
+                <div class="divider"></div>
+                <table class="no-border" style="margin-top: 6px;">
+                    <tr>
+                        <td><span class="label">Name:</span> {{ student.first_name }} {{ student.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="label">Course:</span> {% if student.course %}{{ student.course.name }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="label">NSIN:</span> {% if student.NSIN %}{{ student.NSIN }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+<div class="muted" style="margin-top: 6px;">
+                    Academic Year: {{ ledger.study_year.year|default:"N/A" }}, Semester: {{ ledger.semester.semester }}
+                </div>
+                <div class="section-title mt-3">
+                    Fee Breakdowns
+                </div>
+    <table style="margin-top: 6px;">
+        <thead>
+            <tr>
+                <th style="width: 40%; text-align: left;">PAYMENT TYPE</th>
+                <th class="right" style="width: 20%;">Amount</th>
+                <th class="right" style="width: 20%;">Paid</th>
+                <th class="right" style="width: 20%;">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in breakdowns %}
+            <tr>
+                <td>{{ row.payment_type }}</td>
+                <td class="right">{{ row.amount_display }}</td>
+                <td class="right">{{ row.paid_display }}</td>
+                <td class="right"><font color="{{ row.balance_color }}">{{ row.balance_display }}</font></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="summary-label">Total Paid:</td>
+                <td class="summary-value">{{ total_paid_display }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="summary-label">Balance:</td>
+                <td class="summary-value"><font color="{{ overall_balance_color }}">{{ balance_display }}</font></td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="section-title mt-3">
+        Payment History
+    </div>
+
+    <table style="margin-top: 10px;">
+        <thead>
+            <tr>
+                <th style="width: 25%; text-align: left;">DATE OF PAYMENT</th>
+                <th style="width: 50%; text-align: left;">PAYMENT TYPE</th>
+                <th class="right" style="width: 25%;">AMOUNT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>{{ p.date_display }}</td>
+                <td>{{ p.payment_type }}</td>
+                <td class="right">{{ p.amount_display }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center;">No payments recorded.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="muted" style="margin-top: 10px; text-align: center;">Generated on: {{ generated_on|date:"Y-m-d H:i" }}</div>
+</body>
+</html>

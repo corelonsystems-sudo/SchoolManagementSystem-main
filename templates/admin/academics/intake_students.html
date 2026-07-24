@@ -1,0 +1,250 @@
+{% load i18n admin_urls static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            padding: 20px;
+        }
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1c4a7a;
+            /* border-bottom: 2px solid #1c4a7a; */
+            padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #1c4a7a;
+            border-radius: 4px;
+        }
+        .form-row > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-row label {
+            font-weight: 600;
+            font-size: 11px;
+            color: #b8d4e8;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .form-row p {
+            font-size: 13px;
+            color: #ffffff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        thead {
+            background: #1c4a7a;
+            color: #fff;
+        }
+        th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e1e8ef;
+            font-size: 12px;
+        }
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        tbody tr:hover {
+            background: #eaf1f8;
+        }
+        .button {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #1c4a7a;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #2a5d96;
+        }
+        .submit-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .quiet {
+            color: #8aa0b5;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+        .filters-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d9e1ea;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d9e1ea;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #fff;
+        }
+        .no-results {
+            display: none;
+            color: #8aa0b5;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>{{ title }} {{ intake.academic_year.name }}</h2>
+    
+    <div class="filters-row">
+        <input type="text" id="searchInput" placeholder="Search by name, NSIN, or registration number..." class="search-input">
+        <select id="genderFilter" class="filter-select">
+            <option value="">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <div>
+            <label>Intake:</label>
+            <p>{{ intake.name }} ({{ intake.academic_year.name }})</p>
+        </div>
+        <div>
+            <label>Status:</label>
+            <p>{{ intake.status }}</p>
+        </div>
+        <div>
+            <label>Period:</label>
+            <p>{{ intake.start_date|date:"M d, Y" }} - {{ intake.end_date|date:"M d, Y" }}</p>
+        </div>
+        <div>
+            <label>Total Students:</label>
+            <p>{{ students|length }}</p>
+        </div>
+    </div>
+
+    {% if students %}
+    <table id="studentsTable">
+        <thead>
+            <tr>
+                <th>Registration Number</th>
+                <th>Student Name</th>
+                <th>NSIN</th>
+                <th>Gender</th>
+                <th>Study Year</th>
+                <th>Semester</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr data-gender="{{ student.admission.gender|default:'' }}">
+                <td>{{ student.reg_number|default:"N/A" }}</td>
+                <td>{{ student.admission.first_name }} {{ student.admission.last_name }}</td>
+                <td>{{ student.admission.nsin|default:"N/A" }}</td>
+                <td>{{ student.admission.gender|default:"N/A" }}</td>
+                <td>{% with enrollment=student.enrollment_set.last %}{{ enrollment.study_year.year|default:"N/A" }}{% endwith %}</td>
+                <td>{% with enrollment=student.enrollment_set.last %}{{ enrollment.semester.semester|default:"N/A" }}{% endwith %}</td>
+                <td>{{ student.admission.phone|default:"N/A" }}</td>
+                <td>{{ student.admission.email|default:"N/A" }}</td>
+                <td>
+                    <a href="/admin/academics/student/{{ student.id }}/change/" target="_parent" class="button">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p id="noResults" class="no-results">No students match your filters.</p>
+    {% else %}
+    <p class="quiet">No students enrolled in this intake yet.</p>
+    {% endif %}
+
+    <div class="submit-row">
+        <button onclick="window.parent.KIHSAdminModal.close()" class="button">Close</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const genderFilter = document.getElementById('genderFilter');
+        const table = document.getElementById('studentsTable');
+        const noResults = document.getElementById('noResults');
+
+        function filterStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const genderValue = genderFilter.value;
+            const rows = table.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const gender = row.getAttribute('data-gender') || '';
+                
+                const matchesSearch = text.includes(searchTerm);
+                const matchesGender = !genderValue || gender === genderValue;
+                
+                if (matchesSearch && matchesGender) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                table.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                table.style.display = '';
+            }
+        }
+
+        searchInput.addEventListener('input', filterStudents);
+        genderFilter.addEventListener('change', filterStudents);
+    });
+    </script>
+</body>
+</html>

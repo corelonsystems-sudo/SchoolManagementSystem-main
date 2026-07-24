@@ -1,0 +1,813 @@
+{% extends "admin/base_site.html" %}
+{% load static admin_urls %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    body {
+        background: #f5f5f5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    {% if is_popup %}
+    body {
+        background: #ffffff;
+        margin: 0;
+        padding: 0;
+    }
+    #header, .breadcrumbs, #content h1, #content-title {
+        display: none !important;
+    }
+    #content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .info-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    {% else %}
+    .info-container {
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    {% endif %}
+    
+    .profile-header {
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1c4a7a 0%, #2d6a9f 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    
+    .profile-details {
+        flex: 1;
+    }
+    
+    .profile-details h1 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        color: #1c4a7a;
+        font-weight: 600;
+    }
+    
+    .profile-details p {
+        margin: 0 0 12px 0;
+        color: #64748b;
+        font-size: 14px;
+    }
+    
+    .profile-id {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .profile-id span {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1c4a7a;
+    }
+    
+    .profile-details .fee-details {
+        margin-top: 16px;
+        margin-bottom: 0;
+        gap: 24px;
+    }
+    
+    .profile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 200px;
+    }
+    
+    .profile-tag {
+        background: #1c4a7a;
+        color: #ffffff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .profile-registered {
+        font-size: 12px;
+        color: #64748b;
+        text-align: center;
+    }
+    
+    .action-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    
+    .action-btn.primary {
+        background: #1c4a7a;
+        color: #ffffff;
+    }
+    
+    .action-btn.primary:hover {
+        background: #163a5f;
+    }
+    
+    .action-btn.success {
+        background: #16a34a;
+        color: #ffffff;
+    }
+    
+    .action-btn.success:hover {
+        background: #15803d;
+    }
+    
+    .action-btn.info {
+        background: #0ea5e9;
+        color: #ffffff;
+    }
+    
+    .action-btn.info:hover {
+        background: #0284c7;
+    }
+    
+    .action-btn.default {
+        background: #64748b;
+        color: #ffffff;
+    }
+    
+    .action-btn.default:hover {
+        background: #475569;
+    }
+    
+    .tabs-container {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    
+    .tab-btn {
+        padding: 14px 24px;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+        color: #1c4a7a;
+        background: #f1f5f9;
+    }
+    
+    .tab-btn.active {
+        color: #1c4a7a;
+        border-bottom-color: #1c4a7a;
+        background: #ffffff;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 24px;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .section-header {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1c4a7a;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .create-btn {
+        background: #1c4a7a;
+        color: #ffffff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .create-btn:hover {
+        background: #163a5f;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 16px;
+        text-align: left;
+    }
+    
+    .data-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #1c4a7a;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    
+    .data-table td {
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .data-table tr:hover {
+        background: #f8fafc;
+    }
+    
+    .empty-state {
+        color: #64748b;
+        font-style: italic;
+        padding: 40px;
+        text-align: center;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.success {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .status-badge.warning {
+        background: #fef9c3;
+        color: #ca8a04;
+    }
+    
+    .status-badge.danger {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .status-badge.info {
+        background: #e0f2fe;
+        color: #0ea5e9;
+    }
+    
+    .info-grid {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .info-card {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .info-card {
+        padding: 20px;
+        border-right: 1px solid #e2e8f0;
+    }
+    
+    .info-card:last-child {
+        border-right: none;
+    }
+    
+    .info-card-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    
+    .info-card-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1c4a7a;
+    }
+    
+    .fee-details {
+        display: flex;
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+    
+    .fee-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .fee-detail-item label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    
+    .fee-detail-item span {
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+    }
+    
+    .filter-bar {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 0;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 150px;
+    }
+    
+    .filter-group label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        padding: 6px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 12px;
+        background: #ffffff;
+        color: #333;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #1c4a7a;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+    
+    .filter-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .filter-btn.apply {
+        background: #1c4a7a;
+        color: #ffffff;
+    }
+    
+    .filter-btn.apply:hover {
+        background: #163a5f;
+    }
+    
+    .filter-btn.reset {
+        background: #64748b;
+        color: #ffffff;
+    }
+    
+    .filter-btn.reset:hover {
+        background: #475569;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="info-container">
+    <div class="profile-header">
+        <div class="profile-avatar">CF</div>
+        <div class="profile-details">
+            <h1>{{ original.course.name|default:"Course Fee" }}</h1>
+            <p>Academic Year: {{ original.study_year.year|default:"N/A" }} • Semester: {{ original.semester.semester|default:"N/A" }}</p>
+            <div class="profile-id">
+                <i class="fas fa-barcode"></i>
+                <span>CF-{{ original.id|default:"000" }}</span>
+            </div>
+            <div class="fee-details">
+                <div class="fee-detail-item">
+                    <label>Payment Frequency:</label>
+                    <span>Per Semester</span>
+                </div>
+                <div class="fee-detail-item">
+                    <label>Currency:</label>
+                    <span>UGX</span>
+                </div>
+                <div class="fee-detail-item">
+                    <label>Status:</label>
+                    <span class="status-badge success">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <div class="profile-tag">CF-{{ original.id|default:"000" }}</div>
+            <div class="profile-registered">Created: {{ original.pk|yesno:"Yes,No" }}</div>
+        </div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="payments">Payments</button>
+            <button class="tab-btn" data-tab="students">Students</button>
+        </div>
+
+        <div class="tab-content active" id="tab-overview">
+            <div class="section-header">Overview</div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>Academic Year</label>
+                    <select>
+                        <option value="">All Years</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Semester</label>
+                    <select>
+                        <option value="">All Semesters</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="filter-btn apply">Apply</button>
+                    <button class="filter-btn reset">Reset</button>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-label">Tuition Fee</div>
+                    <div class="info-card-value">{{ original.tuition_fee|floatformat:2 }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Collection Rate</div>
+                    <div class="info-card-value">{{ collection_rate|floatformat:1 }}%</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Total Collected</div>
+                    <div class="info-card-value">{{ total_collected|floatformat:2 }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Total Students</div>
+                    <div class="info-card-value">{{ total_students }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-payments">
+            <div class="section-header">
+                Payment Records
+                <button class="create-btn"><i class="fas fa-plus"></i> Add Payment</button>
+            </div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>From Date</label>
+                    <input type="date">
+                </div>
+                <div class="filter-group">
+                    <label>To Date</label>
+                    <input type="date">
+                </div>
+                <div class="filter-group">
+                    <label>Payment Type</label>
+                    <select>
+                        <option value="">All Types</option>
+                        <option value="tuition">Tuition</option>
+                        <option value="admission">Admission</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select>
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="filter-btn apply">Apply</button>
+                    <button class="filter-btn reset">Reset</button>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Payment Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.date|date:"Y-m-d" }}</td>
+                        <td>{{ payment.enrollment.student.first_name }} {{ payment.enrollment.student.last_name }}</td>
+                        <td>{{ payment.payment_type.name }}</td>
+                        <td>{{ payment.amount|floatformat:2 }}</td>
+                        <td><span class="status-badge success">Completed</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No payment records available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="tab-students">
+            <div class="section-header">Enrolled Students</div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>Payment Status</label>
+                    <select>
+                        <option value="">All Status</option>
+                        <option value="fully_paid">Fully Paid</option>
+                        <option value="partially_paid">Partially Paid</option>
+                        <option value="not_paid">Not Paid</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Min Balance</label>
+                    <input type="number" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label>Max Balance</label>
+                    <input type="number" placeholder="1000000">
+                </div>
+                <div class="filter-actions">
+                    <button class="filter-btn apply">Apply</button>
+                    <button class="filter-btn reset">Reset</button>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Admission No</th>
+                        <th>Student Name</th>
+                        <th>Payment Status</th>
+                        <th>Balance</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students_data %}
+                    <tr>
+                        <td>{{ student.admission_number }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>
+                            <span class="status-badge {% if student.status == 'Fully Paid' %}success{% elif student.status == 'Partially Paid' %}warning{% else %}danger{% endif %}">
+                                {{ student.status }}
+                            </span>
+                        </td>
+                        <td>{{ student.balance|floatformat:2 }}</td>
+                        <td><button class="action-btn default" style="padding: 4px 8px; font-size: 11px;">View</button></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No students enrolled for this course fee</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById('tab-' + tabId).classList.add('active');
+            });
+        });
+
+        // Overview Filter
+        const overviewFilterBar = document.querySelector('#tab-overview .filter-bar');
+        if (overviewFilterBar) {
+            const yearSelect = overviewFilterBar.querySelectorAll('select')[0];
+            const semesterSelect = overviewFilterBar.querySelectorAll('select')[1];
+            const applyBtn = overviewFilterBar.querySelector('.filter-btn.apply');
+            const resetBtn = overviewFilterBar.querySelector('.filter-btn.reset');
+
+            function filterOverview() {
+                // Overview tab shows summary cards, no table to filter
+                // This filter could be used to reload data with different parameters
+                console.log('Overview filter applied:', yearSelect.value, semesterSelect.value);
+            }
+
+            applyBtn.addEventListener('click', filterOverview);
+            resetBtn.addEventListener('click', function() {
+                yearSelect.value = '';
+                semesterSelect.value = '';
+                filterOverview();
+            });
+        }
+
+        // Payments Filter
+        const paymentsFilterBar = document.querySelector('#tab-payments .filter-bar');
+        if (paymentsFilterBar) {
+            const fromDateInput = paymentsFilterBar.querySelectorAll('input')[0];
+            const toDateInput = paymentsFilterBar.querySelectorAll('input')[1];
+            const paymentTypeSelect = paymentsFilterBar.querySelectorAll('select')[0];
+            const statusSelect = paymentsFilterBar.querySelectorAll('select')[1];
+            const applyBtn = paymentsFilterBar.querySelector('.filter-btn.apply');
+            const resetBtn = paymentsFilterBar.querySelector('.filter-btn.reset');
+            const tableBody = document.querySelector('#tab-payments .data-table tbody');
+
+            function filterPayments() {
+                const fromDate = fromDateInput.value;
+                const toDate = toDateInput.value;
+                const paymentType = paymentTypeSelect.value;
+                const status = statusSelect.value;
+                const rows = tableBody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    let show = true;
+
+                    if (fromDate && show) {
+                        const dateCell = row.cells[0];
+                        const rowDate = dateCell.textContent.trim();
+                        if (rowDate < fromDate) {
+                            show = false;
+                        }
+                    }
+
+                    if (toDate && show) {
+                        const dateCell = row.cells[0];
+                        const rowDate = dateCell.textContent.trim();
+                        if (rowDate > toDate) {
+                            show = false;
+                        }
+                    }
+
+                    if (paymentType !== '' && show) {
+                        const typeCell = row.cells[2];
+                        const typeText = typeCell.textContent.trim().toLowerCase();
+                        const typeFilter = paymentType.toLowerCase();
+                        if (!typeText.includes(typeFilter)) {
+                            show = false;
+                        }
+                    }
+
+                    if (status !== '' && show) {
+                        const statusCell = row.cells[4];
+                        const statusText = statusCell.textContent.trim().toLowerCase();
+                        const statusFilter = status === 'completed' ? 'completed' : 
+                                             status === 'pending' ? 'pending' : 
+                                             status === 'cancelled' ? 'cancelled' : '';
+                        if (statusText !== statusFilter) {
+                            show = false;
+                        }
+                    }
+
+                    row.style.display = show ? '' : 'none';
+                });
+            }
+
+            applyBtn.addEventListener('click', filterPayments);
+            resetBtn.addEventListener('click', function() {
+                fromDateInput.value = '';
+                toDateInput.value = '';
+                paymentTypeSelect.value = '';
+                statusSelect.value = '';
+                filterPayments();
+            });
+        }
+
+        // Students Filter
+        const studentsFilterBar = document.querySelector('#tab-students .filter-bar');
+        if (studentsFilterBar) {
+            const statusSelect = studentsFilterBar.querySelectorAll('select')[0];
+            const minBalanceInput = studentsFilterBar.querySelectorAll('input')[0];
+            const maxBalanceInput = studentsFilterBar.querySelectorAll('input')[1];
+            const applyBtn = studentsFilterBar.querySelector('.filter-btn.apply');
+            const resetBtn = studentsFilterBar.querySelector('.filter-btn.reset');
+            const tableBody = document.querySelector('#tab-students .data-table tbody');
+
+            function filterStudents() {
+                const status = statusSelect.value;
+                const minBalance = parseFloat(minBalanceInput.value) || 0;
+                const maxBalance = parseFloat(maxBalanceInput.value) || Infinity;
+                const rows = tableBody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    let show = true;
+
+                    if (status !== '') {
+                        const statusCell = row.cells[2];
+                        const statusText = statusCell.textContent.trim();
+                        const statusFilter = status === 'fully_paid' ? 'Fully Paid' : 
+                                             status === 'partially_paid' ? 'Partially Paid' : 
+                                             status === 'not_paid' ? 'Not Paid' : '';
+                        if (statusText !== statusFilter) {
+                            show = false;
+                        }
+                    }
+
+                    if (show) {
+                        const balanceCell = row.cells[3];
+                        const balance = parseFloat(balanceCell.textContent.trim()) || 0;
+                        if (balance < minBalance || balance > maxBalance) {
+                            show = false;
+                        }
+                    }
+
+                    row.style.display = show ? '' : 'none';
+                });
+            }
+
+            applyBtn.addEventListener('click', filterStudents);
+            resetBtn.addEventListener('click', function() {
+                statusSelect.value = '';
+                minBalanceInput.value = '';
+                maxBalanceInput.value = '';
+                filterStudents();
+            });
+        }
+    });
+</script>
+{% endblock %}

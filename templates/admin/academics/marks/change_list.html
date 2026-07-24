@@ -1,0 +1,486 @@
+{% extends "admin/change_list.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .object-tools li { display: inline-block !important; }
+        .bm-btn {
+            background: #1c4a7a !important;
+            border-color: #1c4a7a !important;
+            color: #fff !important;
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            border-radius: 4px !important;
+        }
+        .bm-btn:hover {
+            background: #163a5f !important;
+            border-color: #163a5f !important;
+        }
+
+        /* Modal overlay */
+        .bm-overlay {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important; height: 100% !important;
+            background: rgba(0,0,0,0.5) !important;
+            z-index: 999999 !important;
+            display: none !important;
+        }
+        .bm-overlay.active { display: block !important; }
+
+        /* Modal dialog */
+        .bm-dialog {
+            position: fixed !important;
+            top: 50% !important; left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            background: #fff !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3) !important;
+            width: 80vw !important;
+            max-width: 80vw !important;
+            max-height: 85vh !important;
+            display: none !important;
+            flex-direction: column !important;
+            z-index: 1000000 !important;
+            border-top: 4px solid #1c4a7a !important;
+        }
+        .bm-dialog.active { display: flex !important; }
+
+        .bm-header {
+            background: #1c4a7a !important;
+            padding: 16px 24px !important;
+            border-radius: 10px 10px 0 0 !important;
+            flex-shrink: 0 !important;
+        }
+        .bm-header h2 {
+            margin: 0 !important;
+            font-size: 1.2rem !important;
+            color: #fff !important;
+        }
+
+        .bm-body {
+            padding: 24px !important;
+            overflow-y: auto !important;
+            flex: 1 !important;
+        }
+
+        .bm-filters {
+            display: flex !important;
+            gap: 16px !important;
+            align-items: flex-end !important;
+            margin-bottom: 20px !important;
+            flex-wrap: wrap !important;
+        }
+        .bm-fg {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            min-width: 180px !important;
+        }
+        .bm-fg label {
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            color: #333 !important;
+        }
+        .bm-fg select {
+            padding: 8px 10px !important;
+            border: 1px solid #dde3e9 !important;
+            border-radius: 6px !important;
+            font-size: 0.9rem !important;
+            background: #fbfcfd !important;
+            color: #333 !important;
+        }
+        .bm-fg select:focus {
+            border-color: #1c4a7a !important;
+            outline: none !important;
+            background: #fff !important;
+        }
+
+        .bm-load-btn {
+            padding: 9px 20px !important;
+            background: #1c4a7a !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+        }
+        .bm-load-btn:hover { background: #163a5f !important; }
+        .bm-load-btn:disabled {
+            background: #999 !important;
+            cursor: not-allowed !important;
+        }
+
+        .bm-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 0.9rem !important;
+        }
+        .bm-table thead { background: #f1f5f9 !important; }
+        .bm-table th, .bm-table td {
+            padding: 10px 12px !important;
+            text-align: left !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        .bm-table th {
+            font-weight: 600 !important;
+            color: #475569 !important;
+            font-size: 0.75rem !important;
+            text-transform: uppercase !important;
+        }
+        .bm-table tbody tr:hover { background: #f8fafc !important; }
+
+        .bm-input {
+            width: 70px !important;
+            padding: 5px 8px !important;
+            border: 1px solid #d9e1ea !important;
+            border-radius: 4px !important;
+            font-size: 0.9rem !important;
+            text-align: center !important;
+        }
+        .bm-input:focus {
+            outline: none !important;
+            border-color: #1c4a7a !important;
+        }
+
+        .bm-empty {
+            text-align: center !important;
+            padding: 30px !important;
+            color: #64748b !important;
+        }
+
+        .bm-footer {
+            padding: 16px 24px !important;
+            border-top: 1px solid #e2e8f0 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-shrink: 0 !important;
+        }
+        .bm-footer-info {
+            font-size: 0.85rem !important;
+            color: #64748b !important;
+        }
+        .bm-footer-btns {
+            display: flex !important;
+            gap: 10px !important;
+        }
+        .bm-cancel {
+            padding: 8px 18px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            border: none !important;
+            background: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        .bm-cancel:hover { background: #cbd5e1 !important; }
+        .bm-save {
+            padding: 8px 18px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            border: none !important;
+            background: #16a34a !important;
+            color: #fff !important;
+            font-weight: 600 !important;
+        }
+        .bm-save:hover { background: #15803d !important; }
+        .bm-save:disabled {
+            background: #94a3b8 !important;
+            cursor: not-allowed !important;
+        }
+
+        .bm-msg {
+            margin-top: 12px !important;
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            display: none !important;
+        }
+        .bm-msg.success {
+            background: #d4edda !important;
+            color: #155724 !important;
+            border: 1px solid #c3e6cb !important;
+        }
+        .bm-msg.error {
+            background: #f8d7da !important;
+            color: #721c24 !important;
+            border: 1px solid #f5c6cb !important;
+        }
+
+        .bm-loading {
+            text-align: center !important;
+            padding: 30px !important;
+            color: #64748b !important;
+            font-size: 0.9rem !important;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toolbar = document.querySelector('.object-tools');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Bulk Marks Entry';
+            btn.className = 'button bm-btn';
+            if (toolbar) {
+                var li = document.createElement('li');
+                li.style.cssText = 'display:inline-block;margin-left:10px;';
+                li.appendChild(btn);
+                toolbar.appendChild(li);
+            }
+
+            // Build modal
+            var overlay = document.createElement('div');
+            overlay.className = 'bm-overlay';
+
+            var dialog = document.createElement('div');
+            dialog.className = 'bm-dialog';
+            dialog.innerHTML =
+                '<div class="bm-header"><h2>Bulk Marks Entry</h2></div>' +
+                '<div class="bm-body">' +
+                    '<div class="bm-filters">' +
+                        '<div class="bm-fg"><label>Academic Year</label><select id="bm-year"><option value="">-- Select --</option></select></div>' +
+                        '<div class="bm-fg"><label>Semester</label><select id="bm-semester"><option value="">-- Select --</option></select></div>' +
+                        '<div class="bm-fg"><label>Course Unit</label><select id="bm-unit"><option value="">-- Select --</option></select></div>' +
+                        '<button type="button" class="bm-load-btn" id="bm-load">Load Students</button>' +
+                    '</div>' +
+                    '<div id="bm-content"></div>' +
+                    '<div class="bm-msg" id="bm-msg"></div>' +
+                '</div>' +
+                '<div class="bm-footer">' +
+                    '<div class="bm-footer-info" id="bm-info"></div>' +
+                    '<div class="bm-footer-btns">' +
+                        '<button type="button" class="bm-cancel" id="bm-cancel-btn">Close</button>' +
+                        '<button type="button" class="bm-save" id="bm-save-btn" disabled>Save Marks</button>' +
+                    '</div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+
+            var yearSel = document.getElementById('bm-year');
+            var semSel = document.getElementById('bm-semester');
+            var unitSel = document.getElementById('bm-unit');
+            var loadBtn = document.getElementById('bm-load');
+            var saveBtn = document.getElementById('bm-save-btn');
+            var cancelBtn = document.getElementById('bm-cancel-btn');
+            var msgDiv = document.getElementById('bm-msg');
+            var contentDiv = document.getElementById('bm-content');
+            var infoDiv = document.getElementById('bm-info');
+            var currentStudents = [];
+
+            function openModal() {
+                msgDiv.style.display = 'none';
+                msgDiv.className = 'bm-msg';
+                contentDiv.innerHTML = '<div class="bm-empty">Select filters and click "Load Students" to begin.</div>';
+                infoDiv.textContent = '';
+                saveBtn.disabled = true;
+                currentStudents = [];
+                overlay.classList.add('active');
+                dialog.classList.add('active');
+
+                yearSel.innerHTML = '<option value="">Loading...</option>';
+                semSel.innerHTML = '<option value="">Loading...</option>';
+                unitSel.innerHTML = '<option value="">Loading...</option>';
+
+                fetch('{% url "admin:bulk_marks" %}')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        yearSel.innerHTML = '<option value="">-- Select Year --</option>';
+                        data.study_years.forEach(function(sy) {
+                            var o = document.createElement('option');
+                            o.value = sy.id;
+                            o.textContent = sy.year;
+                            yearSel.appendChild(o);
+                        });
+                        semSel.innerHTML = '<option value="">-- Select Semester --</option>';
+                        data.semesters.forEach(function(sem) {
+                            var o = document.createElement('option');
+                            o.value = sem.id;
+                            o.textContent = sem.semester;
+                            semSel.appendChild(o);
+                        });
+                        unitSel.innerHTML = '<option value="">-- Select Course Unit --</option>';
+                        data.course_units.forEach(function(cu) {
+                            var o = document.createElement('option');
+                            o.value = cu.id;
+                            o.textContent = cu.code + ' - ' + cu.name;
+                            unitSel.appendChild(o);
+                        });
+                    })
+                    .catch(function() {
+                        yearSel.innerHTML = '<option value="">Error loading</option>';
+                        semSel.innerHTML = '<option value="">Error loading</option>';
+                        unitSel.innerHTML = '<option value="">Error loading</option>';
+                    });
+            }
+
+            function closeModal() {
+                overlay.classList.remove('active');
+                dialog.classList.remove('active');
+            }
+
+            btn.addEventListener('click', openModal);
+            cancelBtn.addEventListener('click', closeModal);
+            overlay.addEventListener('click', closeModal);
+
+            loadBtn.addEventListener('click', function() {
+                var yr = yearSel.value;
+                var sm = semSel.value;
+                var cu = unitSel.value;
+                if (!yr || !sm || !cu) {
+                    msgDiv.textContent = 'Please select academic year, semester, and course unit.';
+                    msgDiv.className = 'bm-msg error';
+                    msgDiv.style.display = 'block';
+                    return;
+                }
+
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Loading...';
+                contentDiv.innerHTML = '<div class="bm-loading">Loading students...</div>';
+                msgDiv.style.display = 'none';
+                saveBtn.disabled = true;
+
+                var params = new URLSearchParams({
+                    'study_year': yr,
+                    'semester': sm,
+                    'course_unit': cu
+                });
+
+                fetch('{% url "admin:bulk_marks" %}?' + params.toString())
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        loadBtn.disabled = false;
+                        loadBtn.textContent = 'Load Students';
+
+                        if (data.students_data.length === 0) {
+                            contentDiv.innerHTML = '<div class="bm-empty">No students found for the selected criteria.</div>';
+                            infoDiv.textContent = '';
+                            saveBtn.disabled = true;
+                            currentStudents = [];
+                            return;
+                        }
+
+                        currentStudents = data.students_data;
+                        var html = '<table class="bm-table"><thead><tr>' +
+                            '<th>Student</th><th>NSIN / Reg. Number</th>' +
+                            '<th>Test (30%)</th><th>Final (70%)</th><th>Total</th>' +
+                            '</tr></thead><tbody>';
+
+                        data.students_data.forEach(function(s) {
+                            var testVal = s.test_marks !== null ? s.test_marks : '';
+                            var finalVal = s.final_marks !== null ? s.final_marks : '';
+                            var totalVal = s.total_marks !== null ? s.total_marks : '-';
+                            html += '<tr>' +
+                                '<td>' + escapeHtml(s.student_name) + '</td>' +
+                                '<td>' + escapeHtml(s.student_id) + '</td>' +
+                                '<td><input type="number" class="bm-input" min="0" max="30" step="0.1" ' +
+                                    'name="test_' + s.enrollment_id + '_' + s.course_unit_id + '" ' +
+                                    'value="' + testVal + '" placeholder="-" ' +
+                                    'oninput="bmUpdateTotal(' + s.enrollment_id + ',' + s.course_unit_id + ')"></td>' +
+                                '<td><input type="number" class="bm-input" min="0" max="70" step="0.1" ' +
+                                    'name="final_' + s.enrollment_id + '_' + s.course_unit_id + '" ' +
+                                    'value="' + finalVal + '" placeholder="-" ' +
+                                    'oninput="bmUpdateTotal(' + s.enrollment_id + ',' + s.course_unit_id + ')"></td>' +
+                                '<td><span id="total_' + s.enrollment_id + '_' + s.course_unit_id + '">' + totalVal + '</span></td>' +
+                            '</tr>';
+                        });
+                        html += '</tbody></table>';
+                        contentDiv.innerHTML = html;
+                        infoDiv.textContent = data.students_data.length + ' students loaded';
+                        saveBtn.disabled = false;
+                    })
+                    .catch(function() {
+                        loadBtn.disabled = false;
+                        loadBtn.textContent = 'Load Students';
+                        contentDiv.innerHTML = '<div class="bm-empty">Error loading students. Please try again.</div>';
+                    });
+            });
+
+            saveBtn.addEventListener('click', function() {
+                var yr = yearSel.value;
+                var sm = semSel.value;
+                var cu = unitSel.value;
+
+                var fd = new FormData();
+                fd.append('study_year', yr);
+                fd.append('semester', sm);
+                fd.append('course_unit', cu);
+
+                currentStudents.forEach(function(s) {
+                    var testInput = document.querySelector('input[name="test_' + s.enrollment_id + '_' + s.course_unit_id + '"]');
+                    var finalInput = document.querySelector('input[name="final_' + s.enrollment_id + '_' + s.course_unit_id + '"]');
+                    if (testInput) fd.append('test_' + s.enrollment_id + '_' + s.course_unit_id, testInput.value);
+                    if (finalInput) fd.append('final_' + s.enrollment_id + '_' + s.course_unit_id, finalInput.value);
+                });
+
+                var csrfToken = getCookie('csrftoken');
+                if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                msgDiv.style.display = 'none';
+
+                fetch('{% url "admin:bulk_marks" %}', {
+                    method: 'POST',
+                    body: fd,
+                    headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {}
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Marks';
+                    if (data.success) {
+                        msgDiv.innerHTML = '<strong>Saved!</strong> ' + data.saved_count + ' new, ' + data.updated_count + ' updated.';
+                        msgDiv.className = 'bm-msg success';
+                        msgDiv.style.display = 'block';
+                    } else {
+                        msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                        msgDiv.className = 'bm-msg error';
+                        msgDiv.style.display = 'block';
+                    }
+                })
+                .catch(function() {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Marks';
+                    msgDiv.textContent = 'Error saving marks. Please try again.';
+                    msgDiv.className = 'bm-msg error';
+                    msgDiv.style.display = 'block';
+                });
+            });
+
+            window.bmUpdateTotal = function(enrollmentId, courseUnitId) {
+                var testInput = document.querySelector('input[name="test_' + enrollmentId + '_' + courseUnitId + '"]');
+                var finalInput = document.querySelector('input[name="final_' + enrollmentId + '_' + courseUnitId + '"]');
+                var totalSpan = document.getElementById('total_' + enrollmentId + '_' + courseUnitId);
+                var testVal = parseFloat(testInput.value) || 0;
+                var finalVal = parseFloat(finalInput.value) || 0;
+                totalSpan.textContent = (testVal + finalVal).toFixed(1);
+            };
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function getCookie(name) {
+                var v = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var c = cookies[i].trim();
+                        if (c.substring(0, name.length + 1) === (name + '=')) {
+                            v = decodeURIComponent(c.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return v;
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,354 @@
+{% extends "admin/change_list.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .object-tools li { display: inline-block !important; }
+        .be-btn {
+            background: #1c4a7a !important; border-color: #1c4a7a !important; color: #fff !important;
+            padding: 6px 12px !important; font-size: 0.85rem !important; cursor: pointer !important; border-radius: 4px !important;
+        }
+        .be-btn:hover { background: #163a5f !important; border-color: #163a5f !important; }
+        .be-overlay {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; height: 100% !important;
+            background: rgba(0,0,0,0.5) !important; z-index: 999999 !important; display: none !important;
+        }
+        .be-overlay.active { display: block !important; }
+        .be-dialog {
+            position: fixed !important; top: 50% !important; left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            background: #fff !important; border-radius: 10px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3) !important;
+            width: 80vw !important; max-width: 80vw !important; max-height: 85vh !important;
+            display: none !important; flex-direction: column !important;
+            z-index: 1000000 !important; border-top: 4px solid #1c4a7a !important;
+        }
+        .be-dialog.active { display: flex !important; }
+        .be-header { background: #1c4a7a !important; padding: 16px 24px !important; border-radius: 10px 10px 0 0 !important; flex-shrink: 0 !important; }
+        .be-header h2 { margin: 0 !important; font-size: 1.2rem !important; color: #fff !important; }
+        .be-body { padding: 24px !important; overflow-y: auto !important; flex: 1 !important; }
+        .be-filters { display: flex !important; gap: 16px !important; align-items: flex-end !important; margin-bottom: 20px !important; flex-wrap: wrap !important; }
+        .be-fg { display: flex !important; flex-direction: column !important; gap: 6px !important; min-width: 180px !important; }
+        .be-fg label { font-weight: 600 !important; font-size: 0.85rem !important; color: #333 !important; }
+        .be-fg select { padding: 8px 10px !important; border: 1px solid #dde3e9 !important; border-radius: 6px !important; font-size: 0.9rem !important; background: #fbfcfd !important; color: #333 !important; }
+        .be-fg select:focus { border-color: #1c4a7a !important; outline: none !important; background: #fff !important; }
+        .be-load-btn { padding: 9px 20px !important; background: #1c4a7a !important; color: #fff !important; border: none !important; border-radius: 6px !important; font-size: 0.85rem !important; font-weight: 600 !important; cursor: pointer !important; }
+        .be-load-btn:hover { background: #163a5f !important; }
+        .be-load-btn:disabled { background: #999 !important; cursor: not-allowed !important; }
+        .be-enroll-section { display: flex !important; gap: 16px !important; align-items: flex-end !important; margin-top: 20px !important; padding-top: 20px !important; border-top: 1px solid #e2e8f0 !important; flex-wrap: wrap !important; }
+        .be-enroll-section select { padding: 8px 10px !important; border: 1px solid #dde3e9 !important; border-radius: 6px !important; font-size: 0.9rem !important; background: #fbfcfd !important; color: #333 !important; }
+        .be-enroll-section select:focus { border-color: #1c4a7a !important; outline: none !important; background: #fff !important; }
+        .be-enroll-section select:disabled { opacity: 0.5 !important; }
+        .be-table { width: 100% !important; border-collapse: collapse !important; font-size: 0.9rem !important; }
+        .be-table thead { background: #f1f5f9 !important; }
+        .be-table th, .be-table td { padding: 10px 12px !important; text-align: left !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .be-table th { font-weight: 600 !important; color: #475569 !important; font-size: 0.75rem !important; text-transform: uppercase !important; }
+        .be-table tbody tr:hover { background: #f8fafc !important; }
+        .be-table input[type="checkbox"] { width: 16px !important; height: 16px !important; cursor: pointer !important; }
+        .be-status-enrolled { color: #b91c1c !important; font-size: 0.8rem !important; }
+        .be-status-new { color: #15803d !important; font-size: 0.8rem !important; }
+        .be-empty { text-align: center !important; padding: 30px !important; color: #64748b !important; }
+        .be-loading { text-align: center !important; padding: 30px !important; color: #64748b !important; font-size: 0.9rem !important; }
+        .be-footer { padding: 16px 24px !important; border-top: 1px solid #e2e8f0 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
+        .be-footer-info { font-size: 0.85rem !important; color: #64748b !important; }
+        .be-footer-btns { display: flex !important; gap: 10px !important; }
+        .be-cancel { padding: 8px 18px !important; border-radius: 6px !important; font-size: 0.85rem !important; cursor: pointer !important; border: none !important; background: #e2e8f0 !important; color: #475569 !important; }
+        .be-cancel:hover { background: #cbd5e1 !important; }
+        .be-go { padding: 8px 18px !important; border-radius: 6px !important; font-size: 0.85rem !important; cursor: pointer !important; border: none !important; background: #16a34a !important; color: #fff !important; font-weight: 600 !important; }
+        .be-go:hover { background: #15803d !important; }
+        .be-go:disabled { background: #94a3b8 !important; cursor: not-allowed !important; }
+        .be-msg { margin-top: 12px !important; padding: 10px 12px !important; border-radius: 6px !important; font-size: 0.85rem !important; display: none !important; }
+        .be-msg.success { background: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
+        .be-msg.error { background: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toolbar = document.querySelector('.object-tools');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Bulk Enroll Students';
+            btn.className = 'button be-btn';
+            if (toolbar) {
+                var li = document.createElement('li');
+                li.style.cssText = 'display:inline-block;margin-left:10px;';
+                li.appendChild(btn);
+                toolbar.appendChild(li);
+            }
+
+            var overlay = document.createElement('div');
+            overlay.className = 'be-overlay';
+
+            var dialog = document.createElement('div');
+            dialog.className = 'be-dialog';
+            dialog.innerHTML =
+                '<div class="be-header"><h2>Bulk Enroll Students</h2></div>' +
+                '<div class="be-body">' +
+                    '<div class="be-filters">' +
+                        '<div class="be-fg"><label>Intake</label><select id="be-intake"><option value="">All Intakes</option></select></div>' +
+                        '<div class="be-fg"><label>Course</label><select id="be-course"><option value="">All Courses</option></select></div>' +
+                        '<button type="button" class="be-load-btn" id="be-load">Preview Students</button>' +
+                    '</div>' +
+                    '<div id="be-content"><div class="be-empty">Select intake and/or course, then click "Preview Students".</div></div>' +
+                    '<div class="be-enroll-section" id="be-enroll-section" style="display:none;">' +
+                        '<div class="be-fg"><label>Academic Year</label><select id="be-year" disabled><option value="">-- Select Year --</option></select></div>' +
+                        '<div class="be-fg"><label>Semester</label><select id="be-semester" disabled><option value="">-- Select Semester --</option></select></div>' +
+                    '</div>' +
+                    '<div class="be-msg" id="be-msg"></div>' +
+                '</div>' +
+                '<div class="be-footer">' +
+                    '<div class="be-footer-info" id="be-info"></div>' +
+                    '<div class="be-footer-btns">' +
+                        '<button type="button" class="be-cancel" id="be-cancel-btn">Close</button>' +
+                        '<button type="button" class="be-go" id="be-go-btn" disabled>Enroll Selected</button>' +
+                    '</div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+
+            var intakeSel = document.getElementById('be-intake');
+            var courseSel = document.getElementById('be-course');
+            var yearSel = document.getElementById('be-year');
+            var semSel = document.getElementById('be-semester');
+            var loadBtn = document.getElementById('be-load');
+            var enrollBtn = document.getElementById('be-go-btn');
+            var cancelBtn = document.getElementById('be-cancel-btn');
+            var msgDiv = document.getElementById('be-msg');
+            var contentDiv = document.getElementById('be-content');
+            var infoDiv = document.getElementById('be-info');
+            var enrollSection = document.getElementById('be-enroll-section');
+            var currentStudents = [];
+
+            function openModal() {
+                msgDiv.style.display = 'none';
+                msgDiv.className = 'be-msg';
+                contentDiv.innerHTML = '<div class="be-empty">Select intake and/or course, then click "Preview Students".</div>';
+                infoDiv.textContent = '';
+                enrollBtn.disabled = true;
+                enrollSection.style.display = 'none';
+                yearSel.disabled = true;
+                semSel.disabled = true;
+                currentStudents = [];
+                intakeSel.innerHTML = '<option value="">Loading...</option>';
+                courseSel.innerHTML = '<option value="">Loading...</option>';
+                yearSel.innerHTML = '<option value="">-- Select Year --</option>';
+                semSel.innerHTML = '<option value="">-- Select Semester --</option>';
+                overlay.classList.add('active');
+                dialog.classList.add('active');
+                fetch('/academics/bulk-enroll/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        intakeSel.innerHTML = '<option value="">All Intakes</option>';
+                        data.intakes.forEach(function(i) {
+                            var o = document.createElement('option');
+                            o.value = i.id;
+                            o.textContent = i.name + ' (' + i.status + ')';
+                            intakeSel.appendChild(o);
+                        });
+                        courseSel.innerHTML = '<option value="">All Courses</option>';
+                        data.courses.forEach(function(c) {
+                            var o = document.createElement('option');
+                            o.value = c.id;
+                            o.textContent = c.short_name + ' - ' + c.name;
+                            courseSel.appendChild(o);
+                        });
+                        yearSel.innerHTML = '<option value="">-- Select Year --</option>';
+                        data.study_years.forEach(function(sy) {
+                            var o = document.createElement('option');
+                            o.value = sy.id;
+                            o.textContent = sy.year;
+                            yearSel.appendChild(o);
+                        });
+                        semSel.innerHTML = '<option value="">-- Select Semester --</option>';
+                        data.semesters.forEach(function(sem) {
+                            var o = document.createElement('option');
+                            o.value = sem.id;
+                            o.textContent = sem.semester;
+                            semSel.appendChild(o);
+                        });
+                    })
+                    .catch(function() {
+                        intakeSel.innerHTML = '<option value="">Error loading</option>';
+                        courseSel.innerHTML = '<option value="">Error loading</option>';
+                    });
+            }
+
+            function closeModal() {
+                overlay.classList.remove('active');
+                dialog.classList.remove('active');
+            }
+
+            btn.addEventListener('click', openModal);
+            cancelBtn.addEventListener('click', closeModal);
+            overlay.addEventListener('click', closeModal);
+
+            loadBtn.addEventListener('click', function() {
+                var intakeId = intakeSel.value;
+                var courseId = courseSel.value;
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Loading...';
+                contentDiv.innerHTML = '<div class="be-loading">Loading students...</div>';
+                msgDiv.style.display = 'none';
+                enrollBtn.disabled = true;
+                enrollSection.style.display = 'none';
+                yearSel.disabled = true;
+                semSel.disabled = true;
+                currentStudents = [];
+                var params = new URLSearchParams();
+                if (intakeId) params.append('intake', intakeId);
+                if (courseId) params.append('course', courseId);
+                fetch('/academics/bulk-enroll/?' + params.toString())
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        loadBtn.disabled = false;
+                        loadBtn.textContent = 'Preview Students';
+                        if (!data.students_data || data.students_data.length === 0) {
+                            contentDiv.innerHTML = '<div class="be-empty">No students found for the selected filters.</div>';
+                            infoDiv.textContent = '';
+                            enrollSection.style.display = 'none';
+                            return;
+                        }
+                        currentStudents = data.students_data;
+                        var html = '<table class="be-table"><thead><tr>' +
+                            '<th style="width:40px;"><input type="checkbox" id="be-select-all" checked></th>' +
+                            '<th>Student</th><th>NSIN / Reg. Number</th><th>Course</th><th>Intake</th>' +
+                            '</tr></thead><tbody>';
+                        data.students_data.forEach(function(s) {
+                            var statusBadge = '';
+                            if (s.already_enrolled) {
+                                statusBadge = ' <span class="be-status-enrolled">(already enrolled)</span>';
+                            } else if (!s.has_academic) {
+                                statusBadge = ' <span class="be-status-new">(new - will create record)</span>';
+                            }
+                            html += '<tr>' +
+                                '<td><input type="checkbox" class="be-student-cb" value="' + s.admission_id + '"' + (s.already_enrolled ? '' : ' checked') + '></td>' +
+                                '<td>' + escapeHtml(s.student_name) + statusBadge + '</td>' +
+                                '<td>' + escapeHtml(s.student_id) + '</td>' +
+                                '<td>' + escapeHtml(s.course) + '</td>' +
+                                '<td>' + escapeHtml(s.intake) + '</td>' +
+                            '</tr>';
+                        });
+                        html += '</tbody></table>';
+                        contentDiv.innerHTML = html;
+                        updateSelectionInfo();
+                        enrollSection.style.display = 'flex';
+                        yearSel.disabled = false;
+                        semSel.disabled = false;
+                        document.getElementById('be-select-all').addEventListener('change', function() {
+                            var cbs = document.querySelectorAll('.be-student-cb');
+                            cbs.forEach(function(cb) { cb.checked = this.checked; }.bind(this));
+                            updateSelectionInfo();
+                        });
+                        document.querySelectorAll('.be-student-cb').forEach(function(cb) {
+                            cb.addEventListener('change', updateSelectionInfo);
+                        });
+                    })
+                    .catch(function() {
+                        loadBtn.disabled = false;
+                        loadBtn.textContent = 'Preview Students';
+                        contentDiv.innerHTML = '<div class="be-empty">Error loading students. Please try again.</div>';
+                    });
+            });
+
+            function updateSelectionInfo() {
+                var cbs = document.querySelectorAll('.be-student-cb');
+                var checked = 0;
+                cbs.forEach(function(cb) { if (cb.checked) checked++; });
+                infoDiv.textContent = checked + ' of ' + cbs.length + ' students selected';
+                enrollBtn.disabled = (checked === 0 || !yearSel.value || !semSel.value);
+            }
+
+            yearSel.addEventListener('change', updateSelectionInfo);
+            semSel.addEventListener('change', updateSelectionInfo);
+
+            enrollBtn.addEventListener('click', function() {
+                var yr = yearSel.value;
+                var sm = semSel.value;
+                if (!yr || !sm) {
+                    msgDiv.textContent = 'Please select both academic year and semester.';
+                    msgDiv.className = 'be-msg error';
+                    msgDiv.style.display = 'block';
+                    return;
+                }
+                var selectedIds = [];
+                document.querySelectorAll('.be-student-cb:checked').forEach(function(cb) {
+                    selectedIds.push(cb.value);
+                });
+                if (selectedIds.length === 0) {
+                    msgDiv.textContent = 'No students selected.';
+                    msgDiv.className = 'be-msg error';
+                    msgDiv.style.display = 'block';
+                    return;
+                }
+                enrollBtn.disabled = true;
+                enrollBtn.textContent = 'Enrolling...';
+                msgDiv.style.display = 'none';
+                var fd = new FormData();
+                fd.append('study_year', yr);
+                fd.append('semester', sm);
+                selectedIds.forEach(function(id) { fd.append('admission_ids', id); });
+                var csrfToken = getCookie('csrftoken');
+                if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+                fetch('/academics/bulk-enroll/', {
+                    method: 'POST',
+                    body: fd,
+                    headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {}
+                })
+                .then(function(r) {
+                    if (!r.ok) {
+                        return r.text().then(function(txt) {
+                            throw new Error('Server returned ' + r.status + ': ' + txt.substring(0, 200));
+                        });
+                    }
+                    return r.json();
+                })
+                .then(function(data) {
+                    enrollBtn.disabled = false;
+                    enrollBtn.textContent = 'Enroll Selected';
+                    if (data.success) {
+                        msgDiv.innerHTML = '<strong>Success!</strong> Enrolled: ' + data.enrolled_count +
+                            ', Skipped: ' + data.skipped_count +
+                            (data.created_count > 0 ? ', New records created: ' + data.created_count : '') +
+                            (data.errors && data.errors.length > 0 ? '<br><br><strong>Errors:</strong><br>' + data.errors.join('<br>') : '');
+                        msgDiv.className = 'be-msg success';
+                        msgDiv.style.display = 'block';
+                        setTimeout(function() { window.location.reload(); }, 2500);
+                    } else {
+                        msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                        msgDiv.className = 'be-msg error';
+                        msgDiv.style.display = 'block';
+                    }
+                })
+                .catch(function(err) {
+                    enrollBtn.disabled = false;
+                    enrollBtn.textContent = 'Enroll Selected';
+                    msgDiv.textContent = 'Error: ' + err.message;
+                    msgDiv.className = 'be-msg error';
+                    msgDiv.style.display = 'block';
+                });
+            });
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function getCookie(name) {
+                var v = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var c = cookies[i].trim();
+                        if (c.substring(0, name.length + 1) === (name + '=')) {
+                            v = decodeURIComponent(c.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return v;
+            }
+        });
+    </script>
+{% endblock %}

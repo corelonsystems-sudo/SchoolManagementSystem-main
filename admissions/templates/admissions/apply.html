@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Admission{% endblock %}
+
+{% block content %}
+<style>
+    .apply-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .apply-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #1c4a7a;
+    }
+    .apply-header h1 {
+        color: #1c4a7a;
+        margin: 0 0 10px 0;
+    }
+    .apply-header p {
+        color: #64748b;
+        margin: 0;
+    }
+    .form-section {
+        margin-bottom: 25px;
+    }
+    .form-section h3 {
+        color: #1c4a7a;
+        font-size: 16px;
+        margin: 0 0 15px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .form-group label {
+        font-weight: 600;
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 5px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ea;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #1c4a7a;
+    }
+    .btn-submit {
+        background: #1c4a7a;
+        color: #fff;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+    }
+    .btn-submit:hover {
+        background: #163a5f;
+    }
+    .required {
+        color: #dc3545;
+    }
+    .doc-upload-wrapper {
+        border: 2px dashed #d9e1ea;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        background: #f8fafc;
+    }
+    .doc-upload-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .doc-upload-row:last-child {
+        margin-bottom: 0;
+    }
+    .doc-upload-row input[type="text"] {
+        flex: 0 0 200px;
+        padding: 8px 12px;
+        border: 1px solid #d9e1ea;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .doc-upload-row input[type="file"] {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #d9e1ea;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+    }
+    .doc-remove-btn {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    .doc-remove-btn:hover {
+        background: #c82333;
+    }
+    .doc-add-btn {
+        background: #1c4a7a;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-top: 10px;
+    }
+    .doc-add-btn:hover {
+        background: #163a5f;
+    }
+    .doc-help {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="apply-container">
+    <div class="apply-header">
+        <h1>Apply for Admission</h1>
+        <p>Complete the form below to submit your application for the upcoming intake.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h3>Personal Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Middle Name</label>
+                    <input type="text" name="middle_name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" name="last_name" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date of Birth <span class="required">*</span></label>
+                    <input type="date" name="date_of_birth" required>
+                </div>
+                <div class="form-group">
+                    <label>Gender <span class="required">*</span></label>
+                    <select name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Religion <span class="required">*</span></label>
+                    <input type="text" name="religion" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nationality <span class="required">*</span></label>
+                    <input type="text" name="nationality" required>
+                </div>
+                <div class="form-group">
+                    <label>NSIN</label>
+                    <input type="text" name="NSIN" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Passport Photo</label>
+                    <input type="file" name="passport_photo" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Contact Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone <span class="required">*</span></label>
+                    <input type="text" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" name="email" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Birth District <span class="required">*</span></label>
+                    <input type="text" name="birth_district" required>
+                </div>
+                <div class="form-group">
+                    <label>Subcounty <span class="required">*</span></label>
+                    <input type="text" name="subcounty" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Parish <span class="required">*</span></label>
+                    <input type="text" name="parish" required>
+                </div>
+                <div class="form-group">
+                    <label>Village <span class="required">*</span></label>
+                    <input type="text" name="village" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Parents/Guardians Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Father's Name <span class="required">*</span></label>
+                    <input type="text" name="father_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Father's Phone <span class="required">*</span></label>
+                    <input type="text" name="father_phone" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mother's Name <span class="required">*</span></label>
+                    <input type="text" name="mother_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Mother's Phone <span class="required">*</span></label>
+                    <input type="text" name="mother_phone" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Sponsor Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sponsor Name <span class="required">*</span></label>
+                    <input type="text" name="sponsor_name" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Previous Education</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Former School</label>
+                    <input type="text" name="former_school">
+                </div>
+                <div class="form-group">
+                    <label>Former School District</label>
+                    <input type="text" name="former_school_district">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Academic Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Course <span class="required">*</span></label>
+                    <select name="course" required>
+                        <option value="">Select Course</option>
+                        {% for course in courses %}
+                            <option value="{{ course.id }}">{{ course.name }} ({{ course.short_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Intake <span class="required">*</span></label>
+                    <select name="intake" required>
+                        <option value="">Select Intake</option>
+                        {% for intake in open_intakes %}
+                            <option value="{{ intake.id }}">{{ intake.name }} ({{ intake.academic_year.name|default:"N/A" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Year of Admission <span class="required">*</span></label>
+                    <input type="text" name="year_of_admission" placeholder="e.g., 2026" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Supporting Documents</h3>
+            <div class="doc-upload-wrapper" id="doc-wrapper">
+                <div class="doc-upload-row" id="doc-row-0">
+                    <input type="text" name="doc_name_0" placeholder="Document name (e.g., O-Level Certificate)">
+                    <input type="file" name="doc_file_0" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <button type="button" class="doc-remove-btn" onclick="removeDocRow(0)">Remove</button>
+                </div>
+            </div>
+            <button type="button" class="doc-add-btn" onclick="addDocRow()">+ Add Another Document</button>
+            <p class="doc-help">Upload certificates, transcripts, ID copies, or any other supporting documents. Accepted formats: PDF, DOC, DOCX, JPG, PNG.</p>
+        </div>
+
+        <button type="submit" class="btn-submit">Submit Application</button>
+    </form>
+</div>
+
+<script>
+    var docCounter = 1;
+    function addDocRow() {
+        var wrapper = document.getElementById('doc-wrapper');
+        var row = document.createElement('div');
+        row.className = 'doc-upload-row';
+        row.id = 'doc-row-' + docCounter;
+        row.innerHTML =
+            '<input type="text" name="doc_name_' + docCounter + '" placeholder="Document name (e.g., O-Level Certificate)">' +
+            '<input type="file" name="doc_file_' + docCounter + '" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">' +
+            '<button type="button" class="doc-remove-btn" onclick="removeDocRow(' + docCounter + ')">Remove</button>';
+        wrapper.appendChild(row);
+        docCounter++;
+    }
+    function removeDocRow(id) {
+        var row = document.getElementById('doc-row-' + id);
+        if (row) row.remove();
+    }
+</script>
+{% endblock %}

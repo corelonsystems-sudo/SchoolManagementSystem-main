@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admission Letter for {{ student.first_name }} {{ student.last_name }}</title>
+</head>
+<body>
+    <h1>Admission Letter</h1>
+    <p>Dear {{ student.first_name }} {{ student.last_name }},</p>
+    <p>We are pleased to inform you that you have been admitted to our institution.</p>
+    <p>Your Admission Number is: {{ student.admission_number }}</p>
+    <p>Course: {{ student.course.name }}</p>
+    <p>Year of Admission: {{ student.year_of_admission }}</p>
+    <p>Best regards,</p>
+    <p>Admissions Office</p>
+</body>
+</html>

@@ -1,0 +1,824 @@
+{% load academic_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.first_name }} {{ student.last_name }} - Student Profile</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.5;
+        }
+        .profile-container {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+        .profile-header {
+            padding: 32px 40px;
+            background: #1c4a7a;
+            color: #ffffff;
+            position: relative;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .profile-identity {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #1c4a7a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .profile-name h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .profile-meta {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .profile-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .profile-badge small {
+            display: block;
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .action-btn.primary {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+        .action-btn.success {
+            background: #16a34a;
+            color: #ffffff;
+            border-color: #16a34a;
+        }
+        .action-btn.info {
+            background: #06b6d4;
+            color: #ffffff;
+            border-color: #06b6d4;
+        }
+        .action-btn.light {
+            background: #ffffff;
+            color: #334155;
+            border-color: #e2e8f0;
+        }
+        .action-btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 40px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 14px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab.active {
+            color: #1c4a7a;
+            border-bottom-color: #1c4a7a;
+        }
+        .tab-content {
+            padding: 28px 40px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .status-message {
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .status-message.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-message.error {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .section-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1c4a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .contact-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            align-items: flex-start;
+        }
+        .contact-row .info-item {
+            flex: 0 1 auto;
+            min-width: 160px;
+        }
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: space-between;
+        }
+        .info-row .info-item {
+            flex: 1 1 auto;
+            min-width: 160px;
+        }
+        .enrollment-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .enrollment-table thead {
+            background: #f1f5f9;
+        }
+        .enrollment-table th,
+        .enrollment-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .enrollment-table th {
+            font-weight: 600;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .enrollment-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .info-value {
+            font-size: 15px;
+            color: #0f172a;
+            font-weight: 500;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .enrollment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .enrollment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #1c4a7a;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        .balance-positive {
+            color: #dc2626;
+        }
+        .balance-zero {
+            color: #16a34a;
+        }
+        .ledger-row {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .ledger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .ledger-header:hover {
+            background: #f1f5f9;
+        }
+        .ledger-header-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+        .ledger-number {
+            font-weight: 600;
+            color: #1c4a7a;
+        }
+        .ledger-period {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .ledger-summary {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .ledger-summary-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .ledger-summary-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .ledger-summary-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .ledger-toggle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: transform 0.2s ease;
+        }
+        .ledger-row.open .ledger-toggle {
+            transform: rotate(180deg);
+        }
+        .ledger-details {
+            display: none;
+            padding: 16px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+        }
+        .ledger-row.open .ledger-details {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="header-top">
+                <div class="profile-identity">
+                    <div class="avatar">
+                        {{ student.first_name|first }}{{ student.last_name|first }}
+                    </div>
+                    <div class="profile-name">
+                        <h1>{{ student.first_name }} {{ student.last_name }}</h1>
+                        <div class="profile-meta">
+                            Course: {{ student.course.name|default:"Not assigned" }} &bull;
+                            Year: {{ student.year_of_admission|default:"Not assigned" }} &bull;
+                            Gender: {{ student.admission.get_gender_display }}
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-badge">
+                    {{ student.display_id }}
+                    <small>Student ID</small>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <a href="#" class="action-btn primary marks-sidebar-link">
+                    View Marks
+                </a>
+                <a href="{% url 'student_admission_form' student.admission.id %}" target="_blank" class="action-btn primary">
+                    Print Admission Form
+                </a>
+                <a href="{% url 'admission_letter' student.admission.id %}" target="_blank" class="action-btn success">
+                    Download Admission Letter
+                </a>
+                <a href="{% url 'admin:admissions_student_change' student.admission.id %}" target="_blank" class="action-btn info">
+                    Edit Admission
+                </a>
+                <a href="{% url 'admin:academics_student_change' student.id %}" target="_blank" class="action-btn light">
+                    Edit Student
+                </a>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="academic">Academic Info</div>
+            <div class="tab" data-tab="performance">Performance</div>
+            <div class="tab" data-tab="finance">Finance</div>
+            <div class="tab" data-tab="ledgers">Ledgers</div>
+        </div>
+
+        <div class="tab-content">
+            {% if messages %}
+                <div style="margin-bottom: 16px;">
+                    {% for message in messages %}
+                        <div class="status-message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="tab-panel active" id="overview">
+                <div class="section-card">
+                    <div class="section-title">Contact Information</div>
+                    <div class="contact-row">
+                        <div class="info-item">
+                            <span class="info-label">Primary Phone</span>
+                            <span class="info-value">{{ student.phone|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email Address</span>
+                            <span class="info-value">{{ student.email|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">District</span>
+                            <span class="info-value">{{ student.admission.birth_district|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Subcounty</span>
+                            <span class="info-value">{{ student.admission.subcounty|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Parish</span>
+                            <span class="info-value">{{ student.admission.parish|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Village</span>
+                            <span class="info-value">{{ student.admission.village|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-title">Parent / Sponsor Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Father</span>
+                            <span class="info-value">{{ student.admission.father_name|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Father Phone</span>
+                            <span class="info-value">{{ student.admission.father_phone|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mother</span>
+                            <span class="info-value">{{ student.admission.mother_name|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mother Phone</span>
+                            <span class="info-value">{{ student.admission.mother_phone|default:"Not provided" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sponsor</span>
+                            <span class="info-value">{{ student.admission.sponsor_name|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-panel" id="academic">
+                <div class="section-card">
+                    <div class="section-title">Academic Information</div>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span class="info-label">Admission Number</span>
+                            <span class="info-value">{{ student.admission.admission_number|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">NSIN</span>
+                            <span class="info-value">{{ student.admission.NSIN|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Registration Number</span>
+                            <span class="info-value">{{ student.reg_number|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Course</span>
+                            <span class="info-value">{{ student.course.name|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Year of Admission</span>
+                            <span class="info-value">{{ student.admission.year_of_admission|default:"Not assigned" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Enrollment Status</span>
+                            <span class="info-value">{{ student.admission.get_enrollment_status_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-title">Enrollment History</div>
+                    {% if enrollments %}
+                        <table class="enrollment-table">
+                            <thead>
+                                <tr>
+                                    <th>Academic Year</th>
+                                    <th>Semester</th>
+                                    <th>Enrolled On</th>
+                                    <th>Marks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in enrollments %}
+                                    <tr>
+                                        <td>{{ item.enrollment.study_year.year|default:'N/A' }}</td>
+                                        <td>{{ item.enrollment.semester.semester }}</td>
+                                        <td>{{ item.enrollment.created_at|date:"Y-m-d"|default:"N/A" }}</td>
+                                        <td>
+                                            <a href="#" class="marks-link" data-enrollment-id="{{ item.enrollment.id }}" style="color: #1c4a7a; font-weight: 500; text-decoration: none;">View Results</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-state">No enrollments recorded.</div>
+                    {% endif %}
+                </div>
+
+                <div class="section-card">
+                    <div class="section-title">Enroll for New Period</div>
+                    {% if can_enroll_next %}
+                        <form method="post" action="{% url 'enroll_student' student.id %}" style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+                            {% csrf_token %}
+                            <div class="info-item" style="min-width: 160px;">
+                                <span class="info-label">Academic Year</span>
+                                <select name="study_year" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+                                    <option value="">Select year</option>
+                                    {% for sy in study_years %}
+                                        <option value="{{ sy.id }}">{{ sy.year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="info-item" style="min-width: 160px;">
+                                <span class="info-label">Semester</span>
+                                <select name="semester" required style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+                                    <option value="">Select semester</option>
+                                    {% for sem in semesters %}
+                                        <option value="{{ sem.id }}">{{ sem.semester }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" style="padding: 9px 18px; background: #1c4a7a; color: #ffffff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                Enroll Student
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="empty-state" style="text-align: left;">
+                            This student cannot be enrolled for a new academic year/semester until all course units for the current enrollment have full marks recorded.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-panel" id="performance">
+                <div class="section-card">
+                    <div class="section-title">Performance Summary</div>
+                    {% if enrollments %}
+                        {% for item in enrollments %}
+                            <div class="ledger-row" data-enrollment-id="{{ item.enrollment.id }}">
+                                <div class="ledger-header" onclick="this.parentElement.classList.toggle('open')">
+                                    <div class="ledger-header-main">
+                                        <span class="ledger-number">{{ item.enrollment.study_year.year|default:'N/A' }}</span>
+                                        <span class="ledger-period">Semester {{ item.enrollment.semester.semester }}</span>
+                                    </div>
+                                    <div class="ledger-summary">
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Course Units</span>
+                                            <span class="ledger-summary-value">{{ item.course_unit_count }}</span>
+                                        </div>
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Average Score</span>
+                                            <span class="ledger-summary-value">{% if item.average_score %}{{ item.average_score }}{% else %}-{% endif %}</span>
+                                        </div>
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Grade</span>
+                                            <span class="ledger-summary-value">
+                                                {% if item.average_score %}
+                                                    {% if item.average_score >= 80 %}<span style="color: #16a34a;">A</span>
+                                                    {% elif item.average_score >= 70 %}<span style="color: #2563eb;">B</span>
+                                                    {% elif item.average_score >= 60 %}<span style="color: #ca8a04;">C</span>
+                                                    {% elif item.average_score >= 50 %}<span style="color: #ea580c;">D</span>
+                                                    {% else %}<span style="color: #dc2626;">F</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span style="color: #94a3b8;">Pending</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="ledger-toggle">▼</div>
+                                    </div>
+                                </div>
+                                <div class="ledger-details">
+                                    {% if item.course_units %}
+                                        <table class="enrollment-table" style="font-size: 12px;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="padding: 6px 8px;">Code</th>
+                                                    <th style="padding: 6px 8px;">Course Unit</th>
+                                                    <th style="padding: 6px 8px;">Test Marks (30%)</th>
+                                                    <th style="padding: 6px 8px;">Final Marks (70%)</th>
+                                                    <th style="padding: 6px 8px;">Total</th>
+                                                    <th style="padding: 6px 8px;">Grade</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for cu in item.course_units %}
+                                                    <tr>
+                                                        <td style="padding: 6px 8px;">{{ cu.code }}</td>
+                                                        <td style="padding: 6px 8px;">{{ cu.name }}</td>
+                                                        {% with marks=item.unit_marks|get_item:cu.id %}
+                                                            {% if marks %}
+                                                                <td style="padding: 6px 8px;">{{ marks.test_marks|default:"-" }}</td>
+                                                                <td style="padding: 6px 8px;">{{ marks.final_marks|default:"-" }}</td>
+                                                                <td style="padding: 6px 8px; font-weight: 600; color: #1c4a7a;">{{ marks.total_marks|default:"-" }}</td>
+                                                                <td style="padding: 6px 8px;">
+                                                                    {% if marks.total_marks %}
+                                                                        {% if marks.total_marks >= 80 %}<span style="color: #16a34a; font-weight: 600;">A</span>
+                                                                        {% elif marks.total_marks >= 70 %}<span style="color: #2563eb; font-weight: 600;">B</span>
+                                                                        {% elif marks.total_marks >= 60 %}<span style="color: #ca8a04; font-weight: 600;">C</span>
+                                                                        {% elif marks.total_marks >= 50 %}<span style="color: #ea580c; font-weight: 600;">D</span>
+                                                                        {% else %}<span style="color: #dc2626; font-weight: 600;">F</span>
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        <span style="color: #94a3b8;">Pending</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                            {% else %}
+                                                                <td style="padding: 6px 8px; color: #94a3b8;">-</td>
+                                                                <td style="padding: 6px 8px; color: #94a3b8;">-</td>
+                                                                <td style="padding: 6px 8px; color: #94a3b8;">-</td>
+                                                                <td style="padding: 6px 8px; color: #94a3b8;">Pending</td>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% else %}
+                                        <div style="padding: 12px; color: #64748b; font-size: 13px; text-align: center;">
+                                            No course units assigned for this enrollment.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">No performance data available.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-panel" id="finance">
+                <div class="section-card">
+                    <div class="section-title">Finance Report</div>
+                    {% if ledgers %}
+                        <table class="enrollment-table">
+                            <thead>
+                                <tr>
+                                    <th>Academic Year</th>
+                                    <th>Semester</th>
+                                    <th>Required Amount</th>
+                                    <th>Total Paid</th>
+                                    <th>Balance</th>
+                                    <th>Payments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ledgers %}
+                                    <tr>
+                                        <td>{{ item.ledger.study_year.year|default:'N/A' }}</td>
+                                        <td>{{ item.ledger.semester.semester }}</td>
+                                        <td>{{ item.ledger.required_amount|floatformat:2 }}</td>
+                                        <td>{{ item.ledger.total_paid|floatformat:2 }}</td>
+                                        <td class="{% if item.ledger.balance > 0 %}balance-positive{% else %}balance-zero{% endif %}" style="font-weight: 600;">
+                                            {{ item.ledger.balance|floatformat:2 }}
+                                        </td>
+                                        <td>{{ item.payment_count }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-state">No finance records available.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-panel" id="ledgers">
+                <div class="section-card">
+                    <div class="section-title">Ledger Details</div>
+                    {% if ledgers %}
+                        {% for item in ledgers %}
+                            <div class="ledger-row" data-ledger-id="{{ item.ledger.id }}">
+                                <div class="ledger-header" onclick="this.parentElement.classList.toggle('open')">
+                                    <div class="ledger-header-main">
+                                        <span class="ledger-number">{{ item.ledger.ledger_number }}</span>
+                                        <span class="ledger-period">{{ item.ledger.study_year.year|default:'N/A' }} / Semester {{ item.ledger.semester.semester }}</span>
+                                    </div>
+                                    <div class="ledger-summary">
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Required</span>
+                                            <span class="ledger-summary-value">{{ item.ledger.required_amount|floatformat:2 }}</span>
+                                        </div>
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Paid</span>
+                                            <span class="ledger-summary-value">{{ item.ledger.total_paid|floatformat:2 }}</span>
+                                        </div>
+                                        <div class="ledger-summary-item">
+                                            <span class="ledger-summary-label">Balance</span>
+                                            <span class="ledger-summary-value {% if item.ledger.balance > 0 %}balance-positive{% else %}balance-zero{% endif %}">{{ item.ledger.balance|floatformat:2 }}</span>
+                                        </div>
+                                        <div class="ledger-toggle">▼</div>
+                                    </div>
+                                </div>
+                                <div class="ledger-details">
+                                    <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 12px;">
+                                        <span style="color: #64748b; font-size: 12px;">Generated On</span>
+                                        <span style="font-weight: 500; color: #0f172a;">{{ item.ledger.generated_on|date:"Y-m-d H:i" }}</span>
+                                    </div>
+                                    {% if item.breakdowns %}
+                                        <table class="enrollment-table" style="font-size: 12px;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="padding: 6px 8px;">Payment Type</th>
+                                                    <th style="padding: 6px 8px;">Amount</th>
+                                                    <th style="padding: 6px 8px;">Paid</th>
+                                                    <th style="padding: 6px 8px;">Balance</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for breakdown in item.breakdowns %}
+                                                    <tr>
+                                                        <td style="padding: 6px 8px;">{{ breakdown.payment_type.name }}</td>
+                                                        <td style="padding: 6px 8px;">{{ breakdown.amount|floatformat:2 }}</td>
+                                                        <td style="padding: 6px 8px;">{{ breakdown.paid|floatformat:2 }}</td>
+                                                        <td class="{% if breakdown.balance > 0 %}balance-positive{% else %}balance-zero{% endif %}" style="padding: 6px 8px; font-weight: 600;">{{ breakdown.balance|floatformat:2 }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% else %}
+                                        <div style="padding: 12px; color: #64748b; font-size: 13px; text-align: center;">
+                                            No payment type breakdowns available.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">No ledger records available.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.marks-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const enrollmentId = this.dataset.enrollmentId;
+
+                // Switch to Performance tab
+                document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+                const performanceTab = document.querySelector('.tab[data-tab="performance"]');
+                const performancePanel = document.getElementById('performance');
+                if (performanceTab) performanceTab.classList.add('active');
+                if (performancePanel) performancePanel.classList.add('active');
+
+                // Expand the corresponding enrollment row
+                const targetRow = document.querySelector('.ledger-row[data-enrollment-id="' + enrollmentId + '"]');
+                if (targetRow) {
+                    targetRow.classList.add('open');
+                }
+            });
+        });
+
+        document.querySelectorAll('.marks-sidebar-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Switch to Performance tab
+                document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+                const performanceTab = document.querySelector('.tab[data-tab="performance"]');
+                const performancePanel = document.getElementById('performance');
+                if (performanceTab) performanceTab.classList.add('active');
+                if (performancePanel) performancePanel.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

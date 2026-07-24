@@ -1,0 +1,272 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    body.login {
+        margin: 0;
+        background: #eef1f4;
+    }
+    #header, #nav-global, .breadcrumbs, #content-title, #nav-sidebar {
+        display: none !important;
+    }
+    .login-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        background: #eef1f4;
+        z-index: 9999;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .login-panel-brand {
+        flex: 1 1 45%;
+        max-width: 520px;
+        background: linear-gradient(160deg, #0f2f52 0%, #1c4a7a 60%, #14395f 100%);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        padding: 40px;
+    }
+    .login-panel-brand::before,
+    .login-panel-brand::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .login-panel-brand::before {
+        width: 260px;
+        height: 260px;
+        top: -60px;
+        left: -80px;
+    }
+    .login-panel-brand::after {
+        width: 340px;
+        height: 340px;
+        bottom: -120px;
+        right: -100px;
+    }
+    .login-brand-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 22px;
+        position: relative;
+        z-index: 1;
+    }
+    .login-brand-icon svg {
+        width: 42px;
+        height: 42px;
+        fill: #1c4a7a;
+    }
+    .login-brand-sub {
+        letter-spacing: 1px;
+        font-size: 13px;
+        text-transform: uppercase;
+        opacity: 0.85;
+        margin-bottom: 4px;
+        z-index: 1;
+    }
+    .login-brand-tag {
+        font-size: 13px;
+        opacity: 0.7;
+        margin-bottom: 18px;
+        z-index: 1;
+    }
+    .login-brand-title {
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin: 0 0 18px 0;
+        z-index: 1;
+    }
+    .login-brand-desc {
+        font-size: 13px;
+        opacity: 0.75;
+        max-width: 320px;
+        line-height: 1.6;
+        z-index: 1;
+    }
+    .login-panel-form {
+        flex: 1 1 55%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(160deg, #f4f6f9 0%, #e7ebf0 100%);
+    }
+    .login-card {
+        background: #fff;
+        width: 380px;
+        border-radius: 10px;
+        padding: 34px 34px 26px 34px;
+        box-shadow: 0 12px 40px rgba(20, 40, 70, 0.12);
+    }
+    .login-card h1 {
+        font-size: 20px;
+        margin: 0 0 6px 0;
+        color: #1c2b3a;
+    }
+    .login-card p.subtitle {
+        font-size: 12.5px;
+        color: #7a8794;
+        margin: 0 0 24px 0;
+        line-height: 1.5;
+    }
+    .login-form-row {
+        margin-bottom: 18px;
+    }
+    .login-form-row label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        color: #56626e;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    .login-input-wrap {
+        position: relative;
+    }
+    .login-input-wrap svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 15px;
+        height: 15px;
+        fill: #9aa5b1;
+    }
+    .login-input-wrap input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 12px 11px 36px;
+        border: 1px solid #dde3e9;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fbfcfd;
+    }
+    .login-input-wrap input:focus {
+        outline: none;
+        border-color: #1c4a7a;
+        background: #fff;
+    }
+    .login-submit {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        background: #163a5f;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        margin-top: 6px;
+    }
+    .login-submit:hover {
+        background: #0f2b47;
+    }
+    .login-footer {
+        text-align: center;
+        font-size: 11px;
+        color: #9aa5b1;
+        margin-top: 18px;
+    }
+    .login-errornote {
+        background: #fdecea;
+        color: #b3261e;
+        border: 1px solid #f5c2c0;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 12.5px;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="login-overlay">
+    <div class="login-panel-brand">
+        <div class="login-brand-icon">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z"/></svg>
+        </div>
+        <div class="login-brand-sub">Kisoro Institute of Health Sciences</div>
+        <div class="login-brand-tag">Nice to see you again</div>
+        <h1 class="login-brand-title">WELCOME<br>BACK</h1>
+        <p class="login-brand-desc">
+            Your trusted partner in health education excellence. Providing
+            comprehensive health sciences management with dedication to
+            every student and staff.
+        </p>
+    </div>
+    <div class="login-panel-form">
+        <div class="login-card">
+            <h1>Login Account</h1>
+            <p class="subtitle">Sign in to access your dashboard, manage academics, and continue providing excellent service.</p>
+
+            {% if form.errors and not form.non_field_errors %}
+                <p class="login-errornote">
+                    {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+                </p>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <p class="login-errornote">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <p class="login-errornote">
+                    {% blocktranslate trimmed %}
+                        You are authenticated as {{ username }}, but are not authorized to
+                        access this page. Would you like to login to a different account?
+                    {% endblocktranslate %}
+                </p>
+            {% endif %}
+
+            <form action="{{ app_path }}" method="post" id="login-form">
+                {% csrf_token %}
+                <div class="login-form-row">
+                    <label for="id_username">Username</label>
+                    <div class="login-input-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                        {{ form.username }}
+                    </div>
+                    {{ form.username.errors }}
+                </div>
+                <div class="login-form-row">
+                    <label for="id_password">Password</label>
+                    <div class="login-input-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M12 17a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10a2 2 0 012-2h1V6a5 5 0 0110 0v2h1zm-6-5a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>
+                        {{ form.password }}
+                    </div>
+                    {{ form.password.errors }}
+                    <input type="hidden" name="next" value="{{ next }}">
+                </div>
+                <button type="submit" class="login-submit">Sign In</button>
+            </form>
+
+            <p class="login-footer">&copy; Kisoro Institute of Health Sciences &middot; Passionate about health education</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Application Submitted Successfully{% endblock %}
+
+{% block content %}
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    .success-icon svg {
+        width: 40px;
+        height: 40px;
+        fill: #fff;
+    }
+    .success-container h1 {
+        color: #1c4a7a;
+        margin: 0 0 15px 0;
+    }
+    .success-container p {
+        color: #64748b;
+        margin: 0 0 30px;
+        line-height: 1.6;
+    }
+    .btn-home {
+        display: inline-block;
+        background: #1c4a7a;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .btn-home:hover {
+        background: #163a5f;
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">
+        <svg viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+    </div>
+    <h1>Application Submitted Successfully!</h1>
+    <p>
+        Thank you for your application. Our admissions team will review your application and get back to you within the next few days.
+        You will be notified via email about the status of your application.
+    </p>
+    <a href="/" class="btn-home">Return to Home</a>
+</div>
+{% endblock %}

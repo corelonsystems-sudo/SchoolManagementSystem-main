@@ -1,0 +1,627 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/admin-compact.css' %}">
+    <style>
+        :root {
+            --system-primary: #1c4a7a;
+            --system-primary-dark: #163a5f;
+            --system-primary-deep: #0f2b47;
+            --system-bg: #eef1f4;
+            --system-surface: #ffffff;
+            --system-border: #d9e1ea;
+        }
+
+        body {
+            background: var(--system-bg);
+        }
+
+        #header,
+        #branding,
+        .sidebar,
+        .sidebar-header-wrapper,
+        .sidebar-wrapper,
+        #nav-sidebar {
+            background: linear-gradient(160deg, var(--system-primary-deep) 0%, var(--system-primary) 60%, var(--system-primary-dark) 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .sidebar-section,
+        .sidebar-section:last-child,
+        .sidebar .sidebar-section {
+            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Make sidebar section titles non-clickable */
+        .sidebar-section-title,
+        .sidebar .sidebar-section-title,
+        .sidebar .nav-header,
+        .nav-sidebar .nav-header,
+        .sidebar h3,
+        .sidebar .module h2,
+        .sidebar .module h2 a,
+        .nav-sidebar .module h2,
+        .nav-sidebar .module h2 a {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
+
+        .sidebar-section-title a,
+        .sidebar .sidebar-section-title a,
+        .nav-sidebar .nav-header a,
+        .sidebar .module h2 a,
+        .nav-sidebar .module h2 a,
+        .nav-header a {
+            pointer-events: none !important;
+            cursor: default !important;
+            text-decoration: none !important;
+        }
+
+        /* Target all app index links in sidebar */
+        .sidebar .module h2 a[href*="/admin/"],
+        .nav-sidebar .module h2 a[href*="/admin/"],
+        a[href$="/admin/academics/"],
+        a[href$="/admin/admissions/"],
+        a[href$="/admin/finance/"],
+        a[href$="/admin/staff/"],
+        a[href$="/admin/auth/"],
+        .sidebar .module h2 a,
+        .nav-sidebar .module h2 a {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
+
+        .sidebar a,
+        .sidebar a:visited,
+        .sidebar a:hover,
+        #branding a,
+        #branding a:visited,
+        #branding a:hover {
+            color: #ffffff !important;
+        }
+
+        .sidebar a:hover,
+        .sidebar .selected a,
+        .sidebar .selected {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .module h2,
+        .module caption,
+        .inline-group h2,
+        .selector-chosen h2,
+        .collapse h2 {
+            background: var(--system-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .button,
+        input[type="submit"],
+        input[type="button"],
+        .submit-row input,
+        .object-tools a,
+        .object-tools li a,
+        .related-widget-wrapper-link.add-related,
+        .related-widget-wrapper-link.change-related,
+        .related-widget-wrapper-link.view-related {
+            background: var(--system-primary) !important;
+            border-color: var(--system-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .button:hover,
+        input[type="submit"]:hover,
+        input[type="button"]:hover,
+        .submit-row input:hover,
+        .object-tools a:hover,
+        .object-tools li a:hover,
+        .related-widget-wrapper-link.add-related:hover,
+        .related-widget-wrapper-link.change-related:hover,
+        .related-widget-wrapper-link.view-related:hover {
+            background: var(--system-primary-dark) !important;
+            border-color: var(--system-primary-dark) !important;
+        }
+
+        .related-widget-wrapper-link.add-related,
+        .related-widget-wrapper-link.change-related,
+        .related-widget-wrapper-link.view-related {
+            display: none !important;
+        }
+
+        .breadcrumbs {
+            background: #f8fafc !important;
+            border-bottom: 1px solid var(--system-border) !important;
+            color: #49617e !important;
+        }
+
+        .breadcrumbs a,
+        .breadcrumbs a:visited {
+            color: var(--system-primary) !important;
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--system-primary-dark) !important;
+        }
+
+        .module,
+        .module aligned,
+        .dashboard .module,
+        .app-authentication .module,
+        .app-admissions .module,
+        .app-finance .module,
+        .app-academics .module,
+        .app-staff .module {
+            border-color: var(--system-border) !important;
+            background: var(--system-surface) !important;
+        }
+
+        table thead th {
+            background: linear-gradient(135deg, var(--system-primary) 0%, var(--system-primary-dark) 100%) !important;
+            color: #ffffff !important;
+        }
+
+        table thead th a,
+        table thead th a:link,
+        table thead th a:visited,
+        table thead th .text a,
+        table thead th .text a:link,
+        table thead th .text a:visited {
+            color: #ffffff !important;
+        }
+
+        body.admin-modal-open {
+            overflow: hidden;
+        }
+        .admin-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+        }
+        .admin-modal-dialog {
+            position: relative;
+            width: 65vw;
+            height: auto;
+            max-height: calc(100vh - 32px);
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-modal-dialog .admin-modal-frame {
+            width: 100%;
+            height: auto;
+            flex: 0 0 auto;
+            border: 0;
+            display: block;
+            background: #ffffff;
+        }
+        .admin-modal-dialog.admin-modal-dialog--static {
+            height: 85vh;
+        }
+        .admin-modal-dialog--static .admin-modal-frame {
+            height: 100%;
+            flex: 1 1 auto;
+        }
+        .admin-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #ffffff;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Search bar alignment and spacing */
+        #changelist-search {
+            padding: 8px !important;
+            margin-top: 40px !important;
+        }
+        #changelist-search > div {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            max-width: none !important;
+        }
+        #changelist-search input[type="text"],
+        #changelist-search input[type="search"] {
+            margin: 0 !important;
+            vertical-align: middle !important;
+        }
+        #changelist-search .changelist-filter-select-wrapper {
+            display: inline-flex !important;
+            align-items: center !important;
+            vertical-align: middle !important;
+        }
+        #changelist-search input[type="submit"] {
+            vertical-align: middle !important;
+            margin: 0 !important;
+        }
+        #changelist-search label {
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+
+        /* Grouped permissions styling */
+        .permissions-control {
+            width: 100%;
+            color: #49617e;
+            font-size: 12px;
+        }
+        .permissions-toolbar {
+            display: grid;
+            grid-template-columns: auto auto minmax(180px, 1fr);
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .permissions-title {
+            color: #49617e;
+            font-size: 12px;
+        }
+        .permissions-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .permissions-action {
+            padding: 2px 6px !important;
+            border: 1px solid #9bb2c9 !important;
+            border-radius: 2px !important;
+            background: #ffffff !important;
+            color: #49617e !important;
+            font-size: 11px !important;
+            cursor: pointer;
+        }
+        .permissions-action:hover {
+            background: #eaf1f8 !important;
+        }
+        .permissions-search {
+            justify-self: end;
+            width: min(100%, 230px);
+            padding: 4px 7px !important;
+            border: 1px solid #d9e1ea !important;
+            border-radius: 3px;
+            font-size: 11px !important;
+        }
+        .permissions-app-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .permissions-app {
+            min-width: 0;
+            border: 1px solid #d9e1ea;
+            border-radius: 5px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #ffffff;
+        }
+        .permissions-app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: #f5f8fb;
+            border-bottom: 1px solid #e1e8ef;
+            color: #304b67;
+            font-size: 11px;
+        }
+        .permissions-count {
+            color: #8aa0b5;
+            font-size: 10px;
+        }
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(300px, 1fr));
+            min-width: 640px;
+            column-gap: 24px;
+            row-gap: 4px;
+            padding: 8px 10px 12px;
+        }
+        .permissions-grid label {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            margin: 0;
+            gap: 14px;
+            color: #49617e;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .permissions-grid label span {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+        }
+        .permissions-grid input[type="checkbox"] {
+            flex: 0 0 auto;
+            width: 14px;
+            height: 14px;
+            margin: 0 !important;
+            accent-color: #35bfa3;
+        }
+        .permissions-grid label:hover {
+            color: #1c4a7a;
+        }
+        .permissions-help {
+            padding-top: 6px;
+            color: #8acfc3;
+            font-size: 10px;
+            text-align: center;
+        }
+        @media (max-width: 800px) {
+            .permissions-toolbar {
+                grid-template-columns: 1fr;
+            }
+            .permissions-search {
+                justify-self: stretch;
+                width: 100%;
+            }
+            .permissions-app-list,
+            .permissions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+    function openIntakeStudentsModal(event, url) {
+        event.preventDefault();
+        if (window.KIHSAdminModal && typeof window.KIHSAdminModal.open === 'function') {
+            window.KIHSAdminModal.open(url, { staticHeight: true });
+        } else {
+            window.open(url, '_blank');
+        }
+    }
+    function openEnrollModal(event, url) {
+        event.preventDefault();
+        if (window.KIHSAdminModal && typeof window.KIHSAdminModal.open === 'function') {
+            window.KIHSAdminModal.open(url, { staticHeight: false });
+        } else {
+            window.open(url, '_blank');
+        }
+    }
+    (function() {
+        const modalStack = [];
+
+        function buildModal(url, options) {
+            options = options || {};
+            const overlay = document.createElement('div');
+            overlay.className = 'admin-modal-overlay';
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'admin-modal-backdrop';
+
+            const dialog = document.createElement('div');
+            dialog.className = 'admin-modal-dialog';
+            if (options.staticHeight) {
+                dialog.classList.add('admin-modal-dialog--static');
+            }
+            if (options.width) {
+                dialog.style.width = options.width;
+            }
+
+            const closeButton = document.createElement('button');
+            closeButton.className = 'admin-modal-close';
+            closeButton.type = 'button';
+            closeButton.setAttribute('aria-label', 'Close');
+            closeButton.innerHTML = '&times;';
+
+            const frame = document.createElement('iframe');
+            frame.className = 'admin-modal-frame';
+            frame.name = 'django_modal_frame__0';
+            frame.src = url;
+
+            dialog.appendChild(closeButton);
+            dialog.appendChild(frame);
+            overlay.appendChild(backdrop);
+            overlay.appendChild(dialog);
+
+            if (!options.staticHeight) {
+                function syncHeight() {
+                    try {
+                        const doc = frame.contentDocument || frame.contentWindow.document;
+                        if (!doc || !doc.documentElement) {
+                            return;
+                        }
+                        const contentHeight = Math.max(
+                            doc.documentElement.scrollHeight || 0,
+                            doc.body ? doc.body.scrollHeight || 0 : 0,
+                            doc.documentElement.offsetHeight || 0,
+                            doc.body ? doc.body.offsetHeight || 0 : 0
+                        );
+                        const availableHeight = Math.max(window.innerHeight - 32, 320);
+                        const finalHeight = Math.min(contentHeight + 4, availableHeight);
+                        frame.style.height = finalHeight + 'px';
+                    } catch (e) {}
+                }
+
+                frame.addEventListener('load', function() {
+                    requestAnimationFrame(function() {
+                        syncHeight();
+                        setTimeout(syncHeight, 50);
+                    });
+                });
+
+                window.addEventListener('resize', syncHeight);
+                overlay._syncHeight = syncHeight;
+            }
+
+            frame.addEventListener('load', function() {
+                try {
+                    const doc = frame.contentDocument || frame.contentWindow.document;
+                    const style = doc.createElement('style');
+                    style.textContent = '.submit-row input[name="_saveasnew"], .submit-row input[name="_addanother"], .submit-row input[name="_continue"], .submit-row .closelink, .submit-row .deletelink { display: none !important; }';
+                    doc.head.appendChild(style);
+                } catch (e) {}
+            });
+
+            function closeCurrent() {
+                window.KIHSAdminModal.close();
+            }
+
+            backdrop.addEventListener('click', closeCurrent);
+            closeButton.addEventListener('click', closeCurrent);
+
+            return overlay;
+        }
+
+        function open(url, options) {
+            const overlay = buildModal(url, options);
+            modalStack.push(overlay);
+            document.body.appendChild(overlay);
+            document.body.classList.add('admin-modal-open');
+        }
+
+        function close() {
+            const overlay = modalStack.pop();
+            if (!overlay) {
+                return;
+            }
+            if (overlay._syncHeight) {
+                window.removeEventListener('resize', overlay._syncHeight);
+            }
+            overlay.remove();
+            if (!modalStack.length) {
+                document.body.classList.remove('admin-modal-open');
+            }
+        }
+
+        function openFromLink(link, relatedFieldId) {
+            const url = new URL(link.href, window.location.href);
+            url.searchParams.set('_popup', '1');
+            url.searchParams.set('_modal', '1');
+            if (relatedFieldId) {
+                url.searchParams.set('_modal_field', relatedFieldId);
+            }
+            open(url.toString());
+        }
+
+        function openFromCurrentChangelist() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('_open_admin_add');
+            let addUrl = url.pathname;
+            if (!addUrl.endsWith('/')) {
+                addUrl += '/';
+            }
+            addUrl += 'add/';
+            const modalUrl = new URL(addUrl, window.location.origin);
+            modalUrl.searchParams.set('_popup', '1');
+            modalUrl.searchParams.set('_modal', '1');
+            open(modalUrl.toString());
+            window.history.replaceState({}, document.title, url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
+        }
+
+        function handlePopupResponse(data, meta) {
+            if (meta.relatedFieldId && typeof window.dismissAddRelatedObjectPopup === 'function') {
+                window.dismissAddRelatedObjectPopup(
+                    {
+                        name: meta.relatedFieldId + '__1',
+                        location: { pathname: meta.pathname || window.location.pathname },
+                        close: function() {}
+                    },
+                    data.value,
+                    data.obj
+                );
+            } else {
+                window.location.reload();
+            }
+            close();
+        }
+
+        window.KIHSAdminModal = {
+            open: open,
+            close: close,
+            handlePopupResponse: handlePopupResponse
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get('_open_admin_add') === '1') {
+                openFromCurrentChangelist();
+            }
+
+            // Prevent clicks on sidebar app index links (Academics, Admissions, etc.)
+            document.body.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link) return;
+
+                const href = link.getAttribute('href');
+                if (href && (
+                    href.endsWith('/admin/academics/') ||
+                    href.endsWith('/admin/admissions/') ||
+                    href.endsWith('/admin/finance/') ||
+                    href.endsWith('/admin/staff/') ||
+                    href.endsWith('/admin/auth/') ||
+                    href.endsWith('/admin/') ||
+                    (link.closest('.sidebar') && link.closest('.module') && link.tagName === 'A' && link.parentElement && link.parentElement.tagName === 'H2')
+                )) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+
+            document.body.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link || link.dataset.popupNo) {
+                    return;
+                }
+
+                const isRelatedAdd = link.classList.contains('related-widget-wrapper-link') && link.id && link.id.indexOf('add_') === 0;
+                const isAddLink = link.classList.contains('addlink') && !link.closest('.related-widget-wrapper');
+
+                if (!isRelatedAdd && !isAddLink) {
+                    return;
+                }
+
+                e.preventDefault();
+                if (isRelatedAdd) {
+                    openFromLink(link, link.id.replace(/^add_/, ''));
+                    return;
+                }
+                openFromLink(link, '');
+            });
+
+            document.body.addEventListener('click', function(e) {
+                const link = e.target.closest('.student-detail-link');
+                if (!link) {
+                    return;
+                }
+                e.preventDefault();
+                if (window.KIHSAdminModal) {
+                    window.KIHSAdminModal.open(link.href, { staticHeight: true, width: '80vw' });
+                } else {
+                    window.open(link.href, '_blank');
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    close();
+                }
+            });
+        });
+    })();
+    </script>
+{% endblock %}

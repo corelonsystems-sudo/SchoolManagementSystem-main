@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admission Letter – {{ student.first_name }} {{ student.last_name }}</title>
+    <style>
+        /* ----- reset & base ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #e8e8e8;
+            font-family: 'Bookman Old Style', 'Times New Roman', serif;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ----- letter card (looks like paper) ----- */
+        .letter {
+            max-width: 820px;
+            width: 100%;
+            background: #ffffff;
+            padding: 50px 55px 45px 55px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        /* ----- typography ----- */
+        .letter p, 
+        .letter li,
+        .letter .detail-line,
+        .letter .office {
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #1e1e1e;
+        }
+
+        .letter b, strong {
+            font-weight: 700;
+        }
+
+        .office {
+            text-align: center;
+            font-weight: 700;
+            font-size: 13pt;
+            letter-spacing: 0.4px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        /* detail rows: label + value */
+        .detail-line {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 3px;
+        }
+        .detail-line .label {
+            min-width: 160px;
+            font-weight: 700;
+        }
+        .detail-line .value {
+            font-weight: 700;
+        }
+        .detail-line .label-wide {
+            min-width: 200px;
+        }
+
+        /* headings & titles */
+        .section-title {
+            font-weight: 700;
+            margin-top: 22px;
+            margin-bottom: 6px;
+            font-size: 12pt;
+        }
+        .admission-title {
+            font-weight: 700;
+            margin: 14px 0 10px 0;
+            text-align: justify;
+            font-size: 12pt;
+        }
+
+        /* lists */
+        ul {
+            list-style: none;
+            padding-left: 28px;
+            margin: 6px 0 10px 0;
+        }
+        ul li {
+            padding-left: 8px;
+            margin-bottom: 2px;
+            text-indent: -18px;
+        }
+
+        /* registration list (i, ii, iii, iv) */
+        ul.reg-list li::before {
+            content: "i.  ";
+            font-weight: 400;
+        }
+        ul.reg-list li:nth-child(2)::before { content: "ii. "; }
+        ul.reg-list li:nth-child(3)::before { content: "iii. "; }
+        ul.reg-list li:nth-child(4)::before { content: "iv. "; }
+
+        /* book list – numbered */
+        ul.book-list {
+            counter-reset: book-counter 0;
+        }
+        ul.book-list li::before {
+            content: counter(book-counter) ". ";
+            counter-increment: book-counter;
+        }
+
+        /* personal requirements – a), b), c) … */
+        ul.personal-list li::before {
+            content: attr(data-letter) ") ";
+            font-weight: 400;
+        }
+
+        /* extra q, r items (inline with personal list style) */
+        .extra-item {
+            padding-left: 28px;
+            margin-top: 2px;
+        }
+
+        .note {
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .signature-block {
+            margin-top: 32px;
+            font-weight: 700;
+        }
+        .signature-block .name {
+            margin-top: 6px;
+        }
+
+        /* subtle divider */
+        .hr-light {
+            margin: 14px 0 6px 0;
+            border: 0;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* ----- action buttons (outside letter) ----- */
+        .actions {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+        }
+        .actions a, 
+        .actions button {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            letter-spacing: 0.3px;
+        }
+        .btn-print {
+            background: #1e2b39;
+            color: white;
+        }
+        .btn-print:hover {
+            background: #0f1a26;
+        }
+        .btn-pdf {
+            background: #1a6d34;
+            color: white;
+        }
+        .btn-pdf:hover {
+            background: #0f5326;
+        }
+
+        /* ----- print styles ----- */
+        @media print {
+            body {
+                background: white;
+                padding: 0.2in;
+                margin: 0;
+            }
+            .letter {
+                max-width: 100%;
+                padding: 0.3in 0.4in;
+                box-shadow: none;
+                border-radius: 0;
+                background: white;
+            }
+            .actions {
+                display: none !important;
+            }
+            .letter p, 
+            .letter li,
+            .letter .detail-line {
+                font-size: 11.5pt;
+            }
+            .detail-line .label {
+                min-width: 140px;
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 1.6cm 1.2cm;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== THE LETTER ========== -->
+<div class="letter">
+
+    <!-- office -->
+    <div class="office">Office of the Academic Registrar</div>
+
+    <!-- date -->
+    <div class="detail-line">
+        <span class="label">Date:</span>
+        <span class="value">17/01/2025</span>
+    </div><br>
+
+    <!-- name -->
+    <div class="detail-line">
+        <span class="label">NAME:</span>
+        <span class="value">{{ student.first_name }} {{ student.last_name }}</span>
+    </div><br>
+
+    <!-- academic year -->
+    <div class="detail-line">
+        <span class="label">ACADEMIC YEAR:</span>
+        <span class="value">{{ student.year_of_admission }}</span>
+    </div><br>
+
+    <!-- program -->
+    <div class="detail-line">
+        <span class="label">PROGRAM OF STUDY:</span>
+        <span class="value">CERTIFICATE IN {{ student.course.name }}</span>
+    </div><br>
+
+    <!-- duration -->
+    <div class="detail-line">
+        <span class="label">DURATION:</span>
+        <span class="value">2 ½ YEARS</span>
+    </div><br>
+
+    <!-- reporting date -->
+    <div class="detail-line">
+        <span class="label">REPORTING DATE:</span>
+        <span class="value">{{ student.reporting }}</span>
+    </div><br>
+
+    <!-- salutation -->
+    <p style="margin-top: 20px; font-weight: 700;">Dear, Mike</p>
+
+    <!-- admission title -->
+    <p class="admission-title">ADMISSION TO A CERTIFICATE PROGRAMME LEADING TO THE AWARD OF CERTIFICATE IN NURSING</p>
+
+    <!-- body text -->
+    <p style="text-align: justify;">
+        I write to offer you a place as a resident student at Kisoro Institute of Health Sciences for the;
+    </p>
+    <p style="text-align: justify;">
+        This offer of admission expires upon failure to show up within 30 days from the day of reporting.
+    </p>
+
+    <!-- registration -->
+    <p class="section-title">REGISTRATION</p>
+    <p style="text-align: justify;">
+        This is the provisional offer made on the basis of the statement of your qualification as presented on your application form. It is subject to the satisfactory verification of those qualifications by the office of the academic registrar at the time of registration and upon verification my MOE.
+    </p>
+    <p style="text-align: justify;">For the purpose of registration, you must bring with you the following</p>
+
+    <ul class="reg-list">
+        <li>Original UCE certificates plus three photocopies.</li>
+        <li>Three plastic spring files</li>
+        <li>Four (4) colored passport size photographs with a white background showing your current likeness (head, ears and shoulders).</li>
+        <li>An identity card from the previous school/college.</li>
+    </ul>
+
+    <p class="note">NOTE</p>
+    <p style="text-align: justify;">Cases of Impersonation, falsification of documents whenever discovered either at registration or afterwards will lead to automatic cancellation of admission.</p>
+
+    <!-- list of text books -->
+    <p class="section-title">LIST OF TEXT BOOKS FOR SCHOOL LIBRARY</p>
+    <p style="text-align: justify;">
+        You <b>MUST</b> come with one of the marked text book for the school library on reporting as they are available in Kampala bookshop e.g. Emperasa solution Limited in Kyambogo, opposite driving permit Face Technology Center, Aristock bookshop, and Diamond trust in Kampala &amp; Gustro bookshop along Sir Apollo Kagwa Road. The text book can be:
+    </p>
+
+    <ul class="book-list">
+        <li><b>Introduction to Anatomy and physiology or healthcare students. By Sturgeon.</b></li>
+        <li><b>Nursing procedures manual book. (compulsory) for personal use</b></li>
+        <li>Palliative medicine.</li>
+        <li><b>Text book for midwives by Myles 16 1 Edition.</b></li>
+        <li>Acute and critical care in Adult Nursing by Desi Tait</li>
+        <li>Social Psychology for nurses</li>
+        <li>Essentials of nursing practice edited by Catherine Delves Jates.</li>
+        <li>Immunization in practice Uganda 3rd Edition (2017)</li>
+        <li>Gynecology by ten teachers.</li>
+        <li>Pediatric Nursing procedures 41h Edition by Vicky. R. Bowdex.</li>
+        <li><b>Medicine for Nurses by SN chough.</b></li>
+        <li>An introduction to community and primary health care. By Diana Guzys 2nd Edition.</li>
+        <li>Essentials of psychiatric Nursing by Many Ann Boyd.</li>
+        <li>Moroney surgery Courses 17th Edition.</li>
+        <li>Human Anatomy by Vander graft.</li>
+        <li>Palliative care nursing b) Marianne matzo.</li>
+        <li>Environmental health and occupation health and safety b) Samuel Obura Atubwa and Mutuku. Alexander Mwanthi (2014).</li>
+        <li>Palliative care in oncology by Bern Alt Epping Obura Atubwa and Mutuku. Alexander Triedemam Nauck (springer).</li>
+    </ul>
+
+    <!-- personal requirements -->
+    <p class="section-title">PERSONAL REQUIREMENTS TO BE CHECKED ON REPORTING.</p>
+
+    <ul class="personal-list">
+        <li data-letter="a">Clinical thermometer</li>
+        <li data-letter="b">BP machine</li>
+        <li data-letter="c">One (l) box of surgical gloves</li>
+        <li data-letter="d">One (l) box of examination gloves</li>
+        <li data-letter="e">Stethoscope</li>
+        <li data-letter="f">Fetal scope (midwives)</li>
+        <li data-letter="g">Nurse' s scissor</li>
+        <li data-letter="h">Nurses watch</li>
+        <li data-letter="i">Tape measure</li>
+        <li data-letter="j">Blanket. two (2) pairs of bed sheets, mattress and pillow</li>
+        <li data-letter="k">Enough descent clothes</li>
+        <li data-letter="l">Two pairs of Hat shoes black or brown</li>
+        <li data-letter="m">Gumboots (color white)</li>
+        <li data-letter="n">Basin, Jerri can, buckets</li>
+        <li data-letter="o">A torch</li>
+        <li data-letter="p">Enough books (minimum of 8-4quire</li>
+    </ul>
+
+    <!-- extra items q, r -->
+    <div class="extra-item">Q) a ream papers</div>
+    <div class="extra-item">R) 6 rolls of toilet paper big</div>
+
+    <!-- signature -->
+    <div class="signature-block">
+        <div class="name">Uwimana Berinah</div>
+        <div style="font-weight: 700; margin-top: 2px;">ACADEMIC REGISTRAR</div>
+    </div>
+
+    <!-- tiny hidden spacer (for layout consistency) -->
+    <div style="height: 1px; opacity: 0;">&nbsp;</div>
+
+</div> <!-- end .letter -->
+
+
+<!-- ========== ACTION BUTTONS ========== -->
+<div class="actions">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Letter</button>
+    <a class="btn-pdf" href="{% url 'admission_letter' student.id %}">⬇️ Download as PDF</a>
+</div>
+
+
+<!-- ========== (legacy iframe function – kept as is) ========== -->
+<script type="text/javascript">
+    function openAdmissionForm(url) {
+        var iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        iframe.style.border = 'none';
+        iframe.setAttribute('frameborder', '0');
+
+        var container = document.getElementById('admission-form-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'admission-form-container';
+            container.style.marginTop = '30px';
+            container.style.padding = '20px';
+            container.style.background = '#fff';
+            container.style.borderRadius = '8px';
+            container.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+            document.body.appendChild(container);
+        }
+        container.innerHTML = '';
+        container.appendChild(iframe);
+    }
+</script>
+
+</body>
+</html>s

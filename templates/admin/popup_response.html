@@ -1,0 +1,30 @@
+{% load i18n static %}<!DOCTYPE html>
+<html>
+  <head><title>{% translate 'Popup closing…' %}</title></head>
+  <body>
+    <script id="django-admin-popup-response-constants"
+            data-popup-response="{{ popup_response_data }}">
+    </script>
+    <script>
+    (function() {
+        const data = JSON.parse(document.getElementById('django-admin-popup-response-constants').dataset.popupResponse);
+        const params = new URLSearchParams(window.location.search);
+        const isModal = params.get('_modal') === '1';
+        const relatedFieldId = params.get('_modal_field') || '';
+
+        if (isModal && window.parent && window.parent !== window && window.parent.KIHSAdminModal) {
+            window.parent.KIHSAdminModal.handlePopupResponse(data, {
+                relatedFieldId: relatedFieldId,
+                pathname: window.location.pathname
+            });
+            return;
+        }
+
+        const s = document.createElement('script');
+        s.src = "{% static 'admin/js/popup_response.js' %}";
+        s.async = false;
+        document.body.appendChild(s);
+    })();
+    </script>
+  </body>
+</html>
