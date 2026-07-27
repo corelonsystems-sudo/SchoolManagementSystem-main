@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="max-width:700px;margin:20px auto;">
+    <h1 style="color:#1c4a7a;">Import Applications from Excel</h1>
+
+    <div style="margin-bottom:20px;">
+        <a href="{% url 'admin:download_application_template' %}"
+           style="display:inline-block;background:#28a745;color:#fff;text-decoration:none;padding:10px 20px;border-radius:4px;font-size:14px;">
+            Download Template
+        </a>
+    </div>
+
+    <div style="background:#fff3cd;border:1px solid #ffeaa7;padding:15px;border-radius:5px;margin-bottom:20px;">
+        <h3 style="margin-top:0;">Instructions</h3>
+        <p>Upload an Excel file (<strong>.xlsx</strong>) with the following columns in the first row (headers):</p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+                <tr style="background:#1c4a7a;color:#fff;">
+                    <th style="padding:6px 10px;text-align:left;">Column</th>
+                    <th style="padding:6px 10px;text-align:left;">Required?</th>
+                    <th style="padding:6px 10px;text-align:left;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding:4px 10px;">first_name</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">middle_name</td><td>No</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">last_name</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">date_of_birth</td><td>Yes</td><td>Format: YYYY-MM-DD</td></tr>
+                <tr><td style="padding:4px 10px;">gender</td><td>Yes</td><td>M or F</td></tr>
+                <tr><td style="padding:4px 10px;">religion</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">nationality</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">birth_district</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">subcounty</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">parish</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">village</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">phone</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">email</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">father_name</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">father_phone</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">mother_name</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">mother_phone</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">sponsor_name</td><td>Yes</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">former_school</td><td>No</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">former_school_district</td><td>No</td><td></td></tr>
+                <tr><td style="padding:4px 10px;">course_short_name</td><td>One of course / course_short_name</td><td>e.g., CS, IT (matches Course.short_name)</td></tr>
+                <tr><td style="padding:4px 10px;">course</td><td>One of course / course_short_name</td><td>Full course name</td></tr>
+                <tr><td style="padding:4px 10px;">intake_name</td><td>One of intake / intake_name</td><td>e.g., "January 2026 Intake"</td></tr>
+                <tr><td style="padding:4px 10px;">intake</td><td>One of intake / intake_name</td><td>Intake ID (numeric)</td></tr>
+                <tr><td style="padding:4px 10px;">year_of_admission</td><td>Yes</td><td>e.g., 2026</td></tr>
+                <tr><td style="padding:4px 10px;">NSIN</td><td>No</td><td>National Student Identification Number</td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:10px;">All imported applications will have status <strong>PENDING</strong>.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" style="background:#f9f9f9;padding:20px;border-radius:5px;border:1px solid #ddd;">
+        {% csrf_token %}
+        <div style="margin-bottom:15px;">
+            <label for="excel_file" style="display:block;font-weight:bold;margin-bottom:5px;">Select Excel File:</label>
+            <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" required
+                   style="padding:8px;width:100%;border:1px solid #ccc;border-radius:4px;">
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button type="submit" style="background:#1c4a7a;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:14px;">
+                Upload &amp; Import
+            </button>
+            <a href="{% url 'admin:admissions_application_changelist' %}" style="background:#6c757d;color:#fff;text-decoration:none;padding:10px 24px;border-radius:4px;font-size:14px;">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    {% if messages %}
+        <div style="margin-top:20px;">
+            {% for message in messages %}
+                <div style="padding:10px 15px;margin-bottom:8px;border-radius:4px;
+                     {% if message.tags == 'error' %}background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;
+                     {% elif message.tags == 'success' %}background:#d4edda;color:#155724;border:1px solid #c3e6cb;
+                     {% elif message.tags == 'warning' %}background:#fff3cd;color:#856404;border:1px solid #ffeaa7;
+                     {% else %}background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb;{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

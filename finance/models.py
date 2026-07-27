@@ -42,7 +42,40 @@ class PaymentType(models.Model):
 class PaymentTypeBreakdown(models.Model):
     ledger = models.ForeignKey('Ledger', on_delete=models.CASCADE, related_name='payment_type_breakdowns')  # Link to the specific Ledger
     payment_type = models.ForeignKey(PaymentType, on_delete=models.CASCADE)  # Payment type for this breakdown
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # Amount for this specific payment type
+    amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0,
+        help_text="Amount charged to this student for this fee. Edit to grant a discount or waiver."
+    )
+    standard_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, editable=False,
+        help_text="The amount originally generated on enrollment, kept so discounts can be reported."
+    )
+    note = models.CharField(
+        max_length=255, blank=True,
+        help_text="Reason for adjusting this amount, e.g. 'Bursary award' or 'Staff child discount'."
+    )
+
+    @property
+    def is_adjusted(self):
+        """True when the charged amount differs from what was generated on enrollment."""
+        return (
+            self.standard_amount is not None
+            and self.amount != self.standard_amount
+        )
+
+    @property
+    def adjustment(self):
+        """Negative for a discount, positive for a surcharge, None if never adjusted."""
+        if self.standard_amount is None:
+            return None
+        return self.amount - self.standard_amount
+
+    def save(self, *args, **kwargs):
+        # Capture the generated amount the first time the row is created so any
+        # later edit can be reported as a discount or surcharge against it.
+        if self.standard_amount is None:
+            self.standard_amount = self.amount
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.payment_type.name} - {self.amount}"

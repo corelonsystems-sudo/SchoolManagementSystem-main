@@ -50,7 +50,7 @@ class Application(models.Model):
     intake = models.ForeignKey('academics.Intake', on_delete=models.CASCADE, related_name='applications')
     year_of_admission = models.CharField(max_length=15)
 
-    NSIN = models.CharField(max_length=20, blank=True, default='0000')
+    NSIN = models.CharField(max_length=20, blank=True, default='', help_text="National Student Identification Number. Leave blank if not yet assigned.")
 
     status = models.CharField(
         max_length=15,
@@ -122,7 +122,7 @@ class Student(models.Model):
     reporting = models.DateField( blank=True, null=True)
     year_of_admission = models.CharField(max_length=15)
 
-    NSIN = models.CharField(max_length=20, unique=True, blank=True, default='0000')
+    NSIN = models.CharField(max_length=20, unique=False, blank=True, default='', help_text="National Student Identification Number. Leave blank if not yet assigned.")
 
     ENROLLMENT_STATUS_CHOICES = [
         ('ENROLLED', 'Enrolled'),

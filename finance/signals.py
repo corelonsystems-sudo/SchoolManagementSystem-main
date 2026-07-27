@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
 from academics.models import Enrollment, StudyYear, semester
@@ -105,6 +105,20 @@ def create_ledger_for_enrollment(sender, instance, created, **kwargs):
             )
 
     ledger.save()
+
+
+@receiver(post_save, sender=PaymentTypeBreakdown)
+@receiver(post_delete, sender=PaymentTypeBreakdown)
+def recalculate_ledger_totals(sender, instance, **kwargs):
+    """
+    Keep the parent ledger's required_amount and balance in step whenever a fee
+    line is added, edited or removed — for example when staff reduce an amount
+    to grant a student a bursary or waiver. Ledger.save() re-sums the
+    breakdowns, so simply re-saving the parent is enough.
+    """
+    ledger = instance.ledger
+    if ledger and ledger.pk:
+        ledger.save()
 
 
 def _get_fee_amount(payment_type, student, study_year, semester, custom_amount):

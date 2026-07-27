@@ -40,7 +40,7 @@ def apply_view(request):
                 course_id=request.POST.get('course'),
                 intake_id=request.POST.get('intake'),
                 year_of_admission=request.POST.get('year_of_admission'),
-                NSIN=request.POST.get('NSIN', '0000'),
+                NSIN=request.POST.get('NSIN', ''),
                 status='PENDING'
             )
 

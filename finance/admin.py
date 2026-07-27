@@ -674,10 +674,47 @@ from datetime import datetime
 from django.http import HttpResponse
 
 
+class PaymentTypeBreakdownInline(admin.TabularInline):
+    """
+    Editable fee lines on a student's ledger. Staff adjust `amount` here to grant
+    a bursary, waiver or any other individual favour; `standard_amount` shows what
+    was originally generated on enrollment so the concession stays auditable.
+    """
+    model = PaymentTypeBreakdown
+    extra = 0
+    fields = ('payment_type', 'standard_amount_display', 'amount', 'adjustment_display', 'note')
+    readonly_fields = ('standard_amount_display', 'adjustment_display')
+    autocomplete_fields = ()
+    verbose_name = 'Fee item'
+    verbose_name_plural = 'Fee items (edit an amount to grant a discount or waiver)'
+
+    def standard_amount_display(self, obj):
+        if obj is None or obj.standard_amount is None:
+            return '—'
+        return "{:,.2f}".format(obj.standard_amount)
+
+    standard_amount_display.short_description = 'Standard'
+
+    def adjustment_display(self, obj):
+        if obj is None or obj.pk is None:
+            return '—'
+        delta = obj.adjustment
+        if not delta:
+            return format_html('<span style="color:#64748b;">No change</span>')
+        colour = '#15803d' if delta < 0 else '#b91c1c'
+        label = 'Discount' if delta < 0 else 'Surcharge'
+        return format_html(
+            '<span style="color:{}; font-weight:600;">{} {:,.2f}</span>',
+            colour, label, abs(delta),
+        )
+
+    adjustment_display.short_description = 'Adjustment'
+
+
 class LedgerAdminForm(forms.ModelForm):
     class Meta:
         model = Ledger
-        fields = ['student', 'study_year', 'semester', 'required_amount']
+        fields = ['student', 'study_year', 'semester']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -695,10 +732,12 @@ class LedgerAdminForm(forms.ModelForm):
 @admin.register(Ledger)
 class LedgerAdmin(admin.ModelAdmin):
     form = LedgerAdminForm
+    inlines = [PaymentTypeBreakdownInline]
     list_display = ('student', 'ledger_number', 'study_year', 'semester', 'required_amount', 'total_paid_display', 'balance_display', 'generated_on', 'print_button')
     search_fields = ('student__admission__first_name', 'student__admission__last_name', 'ledger_number', 'study_year__year', 'semester__semester')
     list_filter = ('study_year', 'semester')
-    readonly_fields = ('ledger_details', 'total_paid', 'balance', 'generated_on')
+    # required_amount is the sum of the fee items below, so it is shown but not typed in.
+    readonly_fields = ('ledger_details', 'total_paid', 'required_amount', 'balance', 'generated_on')
 
     fieldsets = [
         ('Ledger Details', {
@@ -710,6 +749,15 @@ class LedgerAdmin(admin.ModelAdmin):
             'fields': ('student', 'study_year', 'semester', 'total_paid', 'required_amount', 'balance', 'generated_on'),
         }),
     ]
+
+    def save_related(self, request, form, formsets, change):
+        """
+        Django saves the parent before its inlines, so recalculating totals in
+        Ledger.save() alone would use the pre-edit fee lines. Re-save the ledger
+        once the inline formsets have been committed.
+        """
+        super().save_related(request, form, formsets, change)
+        form.instance.save()
 
     def total_paid_display(self, obj):
         payments = Payment.objects.filter(

@@ -591,6 +591,13 @@
         }
 
         function open(url, options) {
+            options = options || {};
+            // Enlarge the Application add popup to 85% of the viewport.
+            // Other add popups keep their default 65vw / auto height.
+            if (typeof url === 'string' && url.indexOf('/admissions/application/add/') !== -1) {
+                options.width = '85vw';
+                options.staticHeight = true;
+            }
             const overlay = buildModal(url, options);
             modalStack.push(overlay);
             document.body.appendChild(overlay);
