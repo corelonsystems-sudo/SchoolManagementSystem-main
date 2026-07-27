@@ -1,0 +1,69 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Database Manager | {{ site_title }}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if is_popup %}
+    <style>
+        #header, .breadcrumbs, #nav-sidebar, .sidebar, .sidebar-wrapper { display: none !important; }
+        #content { margin: 0 !important; padding: 15px !important; }
+        .submit-row input[name="_saveasnew"],
+        .submit-row input[name="_addanother"],
+        .submit-row input[name="_continue"],
+        .submit-row .closelink,
+        .submit-row .deletelink { display: none !important; }
+    </style>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module" style="padding: 20px; max-width: 700px; margin: 0 auto;">
+        <h1 style="color: #1c4a7a; margin-bottom: 20px;">Database Manager</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p style="padding: 10px; background: {% if message.tags == 'error' %}#fee{% elif message.tags == 'success' %}#efe{% else %}#eef{% endif %}; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+
+        <div style="margin-bottom: 30px;">
+            <h2 style="font-size: 16px; color: #333; margin-bottom: 10px;">Export Database</h2>
+            <p style="color: #666; margin-bottom: 15px;">Download a copy of the current database file. This is useful for backups or transferring data to another server.</p>
+            <a href="{% url 'export_database' %}" class="button" style="background: #1c4a7a; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Download Database
+            </a>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+        <div>
+            <h2 style="font-size: 16px; color: #333; margin-bottom: 10px;">Import Database</h2>
+            <p style="color: #666; margin-bottom: 15px;">
+                Upload a <strong>.sqlite3</strong> file to replace the current database.<br>
+                <strong style="color: #c0392b;">Warning:</strong> This will overwrite the current database. A backup of the current database will be created automatically before replacement.
+            </p>
+            <form method="post" enctype="multipart/form-data" style="margin-top: 15px;"{% if is_popup %} action="?_popup=1"{% endif %}>
+                {% csrf_token %}
+                <input type="file" name="db_file" accept=".sqlite3,.db" required
+                    style="margin-bottom: 15px; display: block; padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
+                <button type="submit" class="button"
+                    style="background: #c0392b; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;"
+                    onclick="return confirm('Are you sure you want to replace the current database? This cannot be undone.');">
+                    Upload and Replace Database
+                </button>
+            </form>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+        <p style="color: #999; font-size: 12px;">
+            <a href="/admin/">Back to admin home</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

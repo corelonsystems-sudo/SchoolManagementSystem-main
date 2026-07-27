@@ -23,7 +23,7 @@ SECRET_KEY = 'django-insecure-&jeahvet&1#bs*d)ce+m*^!0jh$*ch4gz0)@7%ga(2f#mg^y=m
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.16.61.28', '127.0.0.1', '10.28.12.138', 'https://sgwsm2vt-8000.euw.devtunnels.ms']
+ALLOWED_HOSTS = ['172.16.61.28', '127.0.0.1', '10.244.103.138', 'https://sgwsm2vt-8000.euw.devtunnels.ms']
 
 INSTALLED_APPS = [
     'jet.dashboard',

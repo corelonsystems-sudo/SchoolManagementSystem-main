@@ -153,6 +153,68 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(Group, CustomGroupAdmin)
 
 
+import os
+import shutil
+import datetime
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
+from django.contrib import messages as django_messages
+from django.conf import settings
+
+
+@staff_member_required
+def export_database(request):
+    """Download a copy of the SQLite database file"""
+    db_path = settings.DATABASES['default']['NAME']
+    if hasattr(db_path, '__fspath__'):
+        db_path = str(db_path)
+
+    if not os.path.exists(db_path):
+        django_messages.error(request, 'Database file not found.')
+        return HttpResponseRedirect('/admin/')
+
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'db_backup_{timestamp}.sqlite3'
+
+    with open(db_path, 'rb') as f:
+        response = HttpResponse(f.read(), content_type='application/x-sqlite3')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+@staff_member_required
+def import_database(request):
+    """Upload and replace the SQLite database file"""
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('db_file')
+        if not uploaded_file:
+            django_messages.error(request, 'No file selected.')
+            return HttpResponseRedirect('/admin/')
+
+        if not uploaded_file.name.endswith('.sqlite3') and not uploaded_file.name.endswith('.db'):
+            django_messages.error(request, 'Please upload a valid .sqlite3 or .db file.')
+            return HttpResponseRedirect('/admin/')
+
+        db_path = settings.DATABASES['default']['NAME']
+        if hasattr(db_path, '__fspath__'):
+            db_path = str(db_path)
+
+        # Backup current database before replacing
+        if os.path.exists(db_path):
+            backup_path = db_path + f'.backup_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}'
+            shutil.copy2(db_path, backup_path)
+
+        # Write uploaded file
+        with open(db_path, 'wb') as f:
+            for chunk in uploaded_file.chunks():
+                f.write(chunk)
+
+        django_messages.success(request, 'Database imported successfully. Please restart the server if on production.')
+        return HttpResponseRedirect('/admin/')
+
+    return HttpResponseRedirect('/admin/')
+
+
 @staff_member_required
 @require_GET
 def dashboard_stats(request):

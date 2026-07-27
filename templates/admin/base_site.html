@@ -3,6 +3,7 @@
 
 {% block extrahead %}
     {{ block.super }}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{% static 'css/admin-compact.css' %}">
     <style>
         :root {
@@ -158,9 +159,18 @@
             background: var(--system-surface) !important;
         }
 
-        table thead th {
-            background: linear-gradient(135deg, var(--system-primary) 0%, var(--system-primary-dark) 100%) !important;
+        table thead,
+        table thead tr,
+        table thead th,
+        table thead td {
+            background: var(--system-primary) !important;
+            background-image: none !important;
             color: #ffffff !important;
+        }
+
+        table thead th {
+            border-left: 0 !important;
+            border-right: 0 !important;
         }
 
         table thead th a,
@@ -232,35 +242,129 @@
             z-index: 2;
         }
 
-        /* Search bar alignment and spacing */
+        /* ---- Changelist search bar ----
+           Every control shares one height so they sit on a common baseline. */
         #changelist-search {
-            padding: 8px !important;
-            margin-top: 40px !important;
+            --search-control-height: 38px;
+            padding: 12px !important;
+            margin-top: 0 !important;
+            clear: both !important;
         }
         #changelist-search > div {
             display: flex !important;
             align-items: center !important;
             flex-wrap: wrap !important;
-            gap: 8px !important;
+            gap: 10px !important;
             max-width: none !important;
         }
-        #changelist-search input[type="text"],
-        #changelist-search input[type="search"] {
+        #changelist-search label {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: var(--search-control-height) !important;
             margin: 0 !important;
+            padding: 0 !important;
+        }
+        #changelist-search label img,
+        #changelist-search #searchbar-icon {
+            display: block !important;
+        }
+        /* Text field: roomier padding, grows to fill free space */
+        #changelist-search input[type="text"],
+        #changelist-search input[type="search"],
+        #changelist-search #searchbar {
+            height: var(--search-control-height) !important;
+            min-width: 240px !important;
+            flex: 1 1 240px !important;
+            margin: 0 !important;
+            padding: 0 14px !important;
+            border: 1px solid var(--system-border) !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
+            font-size: 0.85rem !important;
+            line-height: normal !important;
+            box-sizing: border-box !important;
+            vertical-align: middle !important;
+        }
+        #changelist-search input[type="text"]:focus,
+        #changelist-search input[type="search"]:focus,
+        #changelist-search #searchbar:focus {
+            outline: none !important;
+            border-color: var(--system-primary) !important;
+            box-shadow: 0 0 0 2px rgba(28, 74, 122, 0.15) !important;
+        }
+        /* Dropdown filters match the text field */
+        #changelist-search select {
+            height: var(--search-control-height) !important;
+            margin: 0 !important;
+            padding: 0 12px !important;
+            border: 1px solid var(--system-border) !important;
+            border-radius: 6px !important;
+            background-color: #ffffff !important;
+            font-size: 0.85rem !important;
+            line-height: normal !important;
+            box-sizing: border-box !important;
             vertical-align: middle !important;
         }
         #changelist-search .changelist-filter-select-wrapper {
             display: inline-flex !important;
             align-items: center !important;
-            vertical-align: middle !important;
-        }
-        #changelist-search input[type="submit"] {
-            vertical-align: middle !important;
+            height: var(--search-control-height) !important;
             margin: 0 !important;
+            vertical-align: middle !important;
         }
-        #changelist-search label {
+        /* Submit button aligned to the same height, no baseline drift */
+        #changelist-search input[type="submit"],
+        #changelist-search button[type="submit"] {
+            height: var(--search-control-height) !important;
+            margin: 0 !important;
+            padding: 0 22px !important;
+            border: 1px solid var(--system-primary) !important;
+            border-radius: 6px !important;
+            background: var(--system-primary) !important;
+            color: #ffffff !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            box-sizing: border-box !important;
+            vertical-align: middle !important;
+        }
+        #changelist-search input[type="submit"]:hover,
+        #changelist-search button[type="submit"]:hover {
+            background: var(--system-primary-dark) !important;
+            border-color: var(--system-primary-dark) !important;
+        }
+        /* "N results" / "Show all" link sits inline, not on its own line */
+        #changelist-search .small.quiet,
+        #changelist-search #changelist-search-results {
             display: inline-flex !important;
             align-items: center !important;
+            height: var(--search-control-height) !important;
+            margin: 0 !important;
+            font-size: 0.8rem !important;
+        }
+
+        @media (max-width: 768px) {
+            #changelist-search > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            #changelist-search label {
+                display: none !important;
+            }
+            #changelist-search input[type="text"],
+            #changelist-search input[type="search"],
+            #changelist-search #searchbar,
+            #changelist-search select,
+            #changelist-search .changelist-filter-select-wrapper,
+            #changelist-search input[type="submit"] {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex: 0 0 auto !important;
+            }
         }
 
         /* Grouped permissions styling */
@@ -573,8 +677,8 @@
                     href.endsWith('/admin/finance/') ||
                     href.endsWith('/admin/staff/') ||
                     href.endsWith('/admin/auth/') ||
-                    href.endsWith('/admin/') ||
-                    (link.closest('.sidebar') && link.closest('.module') && link.tagName === 'A' && link.parentElement && link.parentElement.tagName === 'H2')
+                    (href.endsWith('/admin/') && !href.includes('/admin/import-database/') && !href.includes('/admin/export-database/')) ||
+                    (link.closest('.sidebar') && link.closest('.module') && link.tagName === 'A' && link.parentElement && link.parentElement.tagName === 'H2' && !href.includes('/admin/import-database/'))
                 )) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -616,9 +720,126 @@
                 }
             });
 
+            // Database Manager — self-contained modal (no iframe)
+            document.body.addEventListener('click', function(e) {
+                const link = e.target.closest('.db-manager-link');
+                if (!link) return;
+                e.preventDefault();
+                openDatabaseManagerModal();
+            });
+
+            function openDatabaseManagerModal() {
+                // Remove any existing modal
+                var existing = document.getElementById('db-manager-modal');
+                if (existing) existing.remove();
+
+                var overlay = document.createElement('div');
+                overlay.id = 'db-manager-modal';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100000;display:flex;align-items:center;justify-content:center;';
+
+                var dialog = document.createElement('div');
+                dialog.style.cssText = 'background:#fff;border-radius:12px;width:600px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+
+                var header = document.createElement('div');
+                header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #e2e8f0;';
+                header.innerHTML = '<h2 style="margin:0;font-size:18px;color:#1c4a7a;">Database Manager</h2>';
+
+                var closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '&times;';
+                closeBtn.style.cssText = 'background:none;border:none;font-size:24px;cursor:pointer;color:#64748b;padding:0;line-height:1;';
+                closeBtn.onclick = function() { overlay.remove(); };
+                header.appendChild(closeBtn);
+
+                var body = document.createElement('div');
+                body.style.cssText = 'padding:24px;';
+
+                var msgArea = document.createElement('div');
+                msgArea.style.cssText = 'margin-bottom:20px;';
+                body.appendChild(msgArea);
+
+                // Export section
+                var exportSection = document.createElement('div');
+                exportSection.style.cssText = 'margin-bottom:28px;';
+                exportSection.innerHTML =
+                    '<h3 style="font-size:15px;color:#333;margin:0 0 8px;">Export Database</h3>' +
+                    '<p style="color:#666;font-size:13px;margin:0 0 14px;">Download a copy of the current database file for backup or transfer.</p>';
+                var exportBtn = document.createElement('a');
+                exportBtn.href = '/admin/export-database/';
+                exportBtn.textContent = 'Download Database';
+                exportBtn.style.cssText = 'display:inline-block;background:#1c4a7a;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;';
+                exportSection.appendChild(exportBtn);
+                body.appendChild(exportSection);
+
+                // Divider
+                var hr = document.createElement('hr');
+                hr.style.cssText = 'border:none;border-top:1px solid #e2e8f0;margin:24px 0;';
+                body.appendChild(hr);
+
+                // Import section
+                var importSection = document.createElement('div');
+                importSection.innerHTML =
+                    '<h3 style="font-size:15px;color:#333;margin:0 0 8px;">Import Database</h3>' +
+                    '<p style="color:#666;font-size:13px;margin:0 0 6px;">Upload a <strong>.sqlite3</strong> file to replace the current database.</p>' +
+                    '<p style="color:#c0392b;font-size:12px;margin:0 0 14px;"><strong>Warning:</strong> This will overwrite the current database. A backup is created automatically.</p>';
+
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.enctype = 'multipart/form-data';
+                form.action = '/admin/import-database/';
+                form.style.cssText = 'margin-top:10px;';
+
+                var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (csrfToken) {
+                    var csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = csrfToken.value;
+                    form.appendChild(csrfInput);
+                }
+
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.name = 'db_file';
+                fileInput.accept = '.sqlite3,.db';
+                fileInput.required = true;
+                fileInput.style.cssText = 'display:block;width:100%;padding:10px;border:1px solid #d9e1ea;border-radius:8px;margin-bottom:14px;font-size:13px;';
+                form.appendChild(fileInput);
+
+                var submitBtn = document.createElement('button');
+                submitBtn.type = 'submit';
+                submitBtn.textContent = 'Upload and Replace Database';
+                submitBtn.style.cssText = 'background:#c0392b;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;';
+                submitBtn.onclick = function(e) {
+                    if (!fileInput.files.length) {
+                        e.preventDefault();
+                        msgArea.innerHTML = '<div style="padding:10px;background:#fee;border:1px solid #f5b7b1;border-radius:6px;color:#c0392b;font-size:13px;">Please select a file first.</div>';
+                        return;
+                    }
+                    if (!confirm('Are you sure you want to replace the current database? This cannot be undone.')) {
+                        e.preventDefault();
+                    }
+                };
+                form.appendChild(submitBtn);
+                importSection.appendChild(form);
+                body.appendChild(importSection);
+
+                dialog.appendChild(header);
+                dialog.appendChild(body);
+                overlay.appendChild(dialog);
+
+                // Close on backdrop click
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) overlay.remove();
+                });
+
+                document.body.appendChild(overlay);
+            }
+
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     close();
+                    var dbModal = document.getElementById('db-manager-modal');
+                    if (dbModal) dbModal.remove();
                 }
             });
         });
