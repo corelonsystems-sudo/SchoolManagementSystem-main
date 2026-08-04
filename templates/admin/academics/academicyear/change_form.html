@@ -1,0 +1,51 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .changeform-navigation {
+            display: none !important;
+        }
+    </style>
+    <script>
+    function applyAllFilters(container, tableId) {
+        var table = document.getElementById(tableId);
+        var rows = table.querySelectorAll('tbody tr');
+        var selects = container.querySelectorAll('select');
+        var textInput = container.querySelector('input[type="text"]');
+        var courseVal = selects[0] ? selects[0].value : '';
+        var intakeVal = selects[1] ? selects[1].value : '';
+        var statusVal = selects[2] ? selects[2].value : '';
+        var textVal = textInput ? textInput.value.toLowerCase() : '';
+
+        rows.forEach(function(row) {
+            if (row.getAttribute('data-course') === null) return;
+            var show = true;
+            if (courseVal && row.getAttribute('data-course') !== courseVal) show = false;
+            if (intakeVal && row.getAttribute('data-intake') !== intakeVal) show = false;
+            if (statusVal && row.getAttribute('data-status') !== statusVal) show = false;
+            if (textVal) {
+                var rowText = row.textContent.toLowerCase();
+                if (rowText.indexOf(textVal) === -1) show = false;
+            }
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    function filterTable(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableIntake(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableStatus(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableText(input, tableId) {
+        applyAllFilters(input.parentElement, tableId);
+    }
+    </script>
+{% endblock %}

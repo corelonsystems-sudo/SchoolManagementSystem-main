@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Old Application Submitted - KIHS Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1c4a7a 0%, #2d6a9f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .success-wrapper {
+            max-width: 500px;
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            padding: 48px 40px;
+            text-align: center;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #d4edda;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .success-icon svg { width: 40px; height: 40px; fill: #28a745; }
+        .success-wrapper h1 {
+            font-size: 24px;
+            color: #1c4a7a;
+            margin-bottom: 12px;
+        }
+        .success-wrapper p {
+            font-size: 15px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #6c5ce7;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .btn:hover { background: #5b4bd1; }
+    </style>
+</head>
+<body>
+    <div class="success-wrapper">
+        <div class="success-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <h1>Old Application Submitted</h1>
+        <p>Your old application record has been submitted successfully. The admissions office will review it and process it accordingly.</p>
+        <a href="{% url 'portal_landing' %}" class="btn">Back to Portal</a>
+    </div>
+</body>
+</html>

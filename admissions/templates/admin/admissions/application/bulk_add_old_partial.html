@@ -1,0 +1,65 @@
+<div id="bulk-add-form-wrapper">
+    <div style="margin-bottom:12px; padding:10px 14px; background:#e8f4fd; border:1px solid #b3d7f0; border-radius:6px; font-size:13px; color:#1c4a7a;">
+        Only rows with at least a First Name or Last Name will be saved. Course and Intake are required for each row.
+        Set the appropriate status for each old application (e.g., ADMITTED, ACCEPTED, REJECTED).
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:13px; color:#64748b;" id="bulk-row-counter">5 rows</span>
+        <button type="button" id="bulk-add-row-btn" style="background:#1c4a7a;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer;">+ Add Row</button>
+    </div>
+
+    <div id="bulk-scroll-wrap" style="max-height:400px; overflow:auto; border:1px solid #e2e8f0; border-radius:8px;">
+        <table id="bulk-table" style="width:100%;min-width:2200px; border-collapse:collapse; font-size:12px;">
+            <thead>
+                <tr style="background:#1c4a7a; color:#fff; position:sticky; top:0; z-index:10;">
+                    <th style="padding:3px 4px; text-align:center; width:24px; font-size:11px;">#</th>
+                    <th style="padding:3px 4px; font-size:11px;">First Name *</th>
+                    <th style="padding:3px 4px; font-size:11px;">Middle</th>
+                    <th style="padding:3px 4px; font-size:11px;">Last Name *</th>
+                    <th style="padding:3px 4px; font-size:11px;">DOB</th>
+                    <th style="padding:3px 4px; font-size:11px;">Gender</th>
+                    <th style="padding:3px 4px; font-size:11px;">Religion</th>
+                    <th style="padding:3px 4px; font-size:11px;">Nationality</th>
+                    <th style="padding:3px 4px; font-size:11px;">District</th>
+                    <th style="padding:3px 4px; font-size:11px;">Subcounty</th>
+                    <th style="padding:3px 4px; font-size:11px;">Parish</th>
+                    <th style="padding:3px 4px; font-size:11px;">Village</th>
+                    <th style="padding:3px 4px; font-size:11px;">Phone</th>
+                    <th style="padding:3px 4px; font-size:11px;">Email</th>
+                    <th style="padding:3px 4px; font-size:11px;">Father</th>
+                    <th style="padding:3px 4px; font-size:11px;">F.Phone</th>
+                    <th style="padding:3px 4px; font-size:11px;">Mother</th>
+                    <th style="padding:3px 4px; font-size:11px;">M.Phone</th>
+                    <th style="padding:3px 4px; font-size:11px;">Sponsor</th>
+                    <th style="padding:3px 4px; font-size:11px;">School</th>
+                    <th style="padding:3px 4px; font-size:11px;">Sch.Dist</th>
+                    <th style="padding:3px 4px; font-size:11px;">Course *</th>
+                    <th style="padding:3px 4px; font-size:11px;">Intake *</th>
+                    <th style="padding:3px 4px; font-size:11px;">Year</th>
+                    <th style="padding:3px 4px; font-size:11px;">NSIN</th>
+                    <th style="padding:3px 4px; font-size:11px;">Status *</th>
+                    <th style="padding:3px 4px; width:50px; font-size:11px;"></th>
+                </tr>
+            </thead>
+            <tbody id="bulk-table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="bulk-messages" style="margin-top:12px;"></div>
+
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button type="button" id="bulk-submit-btn" style="flex:1; background:#28a745; color:#fff; border:none; border-radius:8px; padding:12px; font-size:15px; font-weight:600; cursor:pointer;">Save All Applications</button>
+        <button type="button" id="bulk-cancel-btn" style="background:#6c757d; color:#fff; border:none; border-radius:8px; padding:12px 20px; font-size:14px; cursor:pointer;">Cancel</button>
+    </div>
+
+    <select id="bulk-course-source" style="display:none;">
+        {% for course in courses %}<option value="{{ course.id }}">{{ course.name|escapejs }} ({{ course.short_name|escapejs }})</option>{% endfor %}
+    </select>
+    <select id="bulk-intake-source" style="display:none;">
+        {% for intake in intakes %}<option value="{{ intake.id }}">{{ intake.name|escapejs }} ({{ intake.academic_year.name|default:"N/A"|escapejs }})</option>{% endfor %}
+    </select>
+    <select id="bulk-status-source" style="display:none;">
+        {% for val, label in status_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+    </select>
+</div>

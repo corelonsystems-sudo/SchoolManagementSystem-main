@@ -1,0 +1,70 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .changeform-navigation {
+            display: none !important;
+        }
+    </style>
+    <script>
+    function applyAllFilters(container, tableId) {
+        var table = document.getElementById(tableId);
+        var rows = table.querySelectorAll('tbody tr');
+        var selects = container.querySelectorAll('select');
+        var textInput = container.querySelector('input[type="text"]');
+        var textVal = textInput ? textInput.value.toLowerCase() : '';
+        
+        rows.forEach(function(row) {
+            if (row.getAttribute('data-group-row') === 'true') {
+                row.style.display = '';
+                return;
+            }
+            if (row.getAttribute('data-intake') === null && row.getAttribute('data-frequency') === null && row.getAttribute('data-semester') === null) return;
+            
+            var show = true;
+            var rowText = row.textContent.toLowerCase();
+            
+            if (textVal && rowText.indexOf(textVal) === -1) show = false;
+            
+            selects.forEach(function(select) {
+                var val = select.value;
+                if (val) {
+                    var attr = select.getAttribute('onchange').includes('Intake') ? 'data-intake' :
+                              select.getAttribute('onchange').includes('Year') ? 'data-year' :
+                              select.getAttribute('onchange').includes('Semester') ? 'data-semester' :
+                              select.getAttribute('onchange').includes('Frequency') ? 'data-frequency' :
+                              select.getAttribute('onchange').includes('Tutor') ? 'data-tutor' : '';
+                    if (attr && row.getAttribute(attr) !== val) show = false;
+                }
+            });
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    function filterTableText(input, tableId) {
+        applyAllFilters(input.parentElement, tableId);
+    }
+
+    function filterTableIntake(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableYear(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableSemester(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableFrequency(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+
+    function filterTableTutor(select, tableId) {
+        applyAllFilters(select.parentElement, tableId);
+    }
+    </script>
+{% endblock %}

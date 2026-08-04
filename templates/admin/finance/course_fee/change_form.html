@@ -1,0 +1,121 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .fee-section { background: #fff; border: 1px solid #dbe3ec; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+        .fee-section h3 { background: #1d4f82; color: #fff; font-size: 14px; margin: 0; padding: 12px 16px; text-transform: uppercase; letter-spacing: .5px; }
+        .fee-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        .fee-info-item { display: flex; flex-direction: column; }
+        .fee-info-item label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+        .fee-info-item span { font-size: 15px; font-weight: 600; color: #1e293b; }
+        .fee-info-item .fee-amount { color: #1d4f82; font-size: 18px; }
+        .fee-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; }
+        .fee-stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; text-align: center; }
+        .fee-stat-card .stat-label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .fee-stat-card .stat-value { font-size: 22px; font-weight: 700; color: #1e293b; }
+        .fee-stat-card .stat-value.success { color: #16a34a; }
+        .fee-stat-card .stat-value.warning { color: #ca8a04; }
+        .fee-stat-card .stat-value.danger { color: #dc2626; }
+        .fee-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .fee-table th { background: #f8fafc; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        .fee-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
+        .fee-table tr:last-child td { border-bottom: none; }
+        .fee-table tr:hover td { background: #f8fafc; }
+        .status-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; }
+        .status-badge.fully-paid { background: #dcfce7; color: #16a34a; }
+        .status-badge.partially-paid { background: #fef9c3; color: #ca8a04; }
+        .status-badge.not-paid { background: #fee2e2; color: #dc2626; }
+        .fee-section-body { padding: 0; }
+        .fee-section-body:has(table) { padding: 0; }
+        .fee-section .fee-section { border: none; margin: 0; }
+        @media (max-width: 768px) {
+            .fee-info-grid, .fee-stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+            .fee-info-grid, .fee-stats-grid { grid-template-columns: 1fr; }
+            .fee-table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+    </style>
+{% endblock %}
+
+{% block field_sets %}
+    {{ fee_info_section|safe }}
+    {{ fee_payments_section|safe }}
+    {{ fee_statistics_section|safe }}
+
+    <div class="fee-section">
+        <h3>Student Payment Status</h3>
+        {% if students_data %}
+            <table class="fee-table">
+                <thead>
+                    <tr>
+                        <th>Admission No</th>
+                        <th>Student Name</th>
+                        <th>Total Paid (UGX)</th>
+                        <th>Balance (UGX)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sd in students_data %}
+                    <tr>
+                        <td>{{ sd.admission_number }}</td>
+                        <td>{{ sd.name }}</td>
+                        <td>{{ sd.total_paid|floatformat:2 }}</td>
+                        <td>{{ sd.balance|floatformat:2 }}</td>
+                        <td>
+                            {% if sd.status == 'Fully Paid' %}
+                                <span class="status-badge fully-paid">Fully Paid</span>
+                            {% elif sd.status == 'Partially Paid' %}
+                                <span class="status-badge partially-paid">Partially Paid</span>
+                            {% else %}
+                                <span class="status-badge not-paid">Not Paid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="padding: 30px; text-align: center; color: #94a3b8; font-size: 14px;">No enrolled students found for this course fee period.</div>
+        {% endif %}
+    </div>
+
+    <div class="fee-section">
+        <h3>Recent Payments</h3>
+        {% if payments %}
+            <table class="fee-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Payment Type</th>
+                        <th>Amount (UGX)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.date|date:"M d, Y H:i" }}</td>
+                        <td>{{ payment.enrollment.student.first_name }} {{ payment.enrollment.student.last_name }}</td>
+                        <td>{{ payment.payment_type.name }}</td>
+                        <td>{{ payment.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="padding: 30px; text-align: center; color: #94a3b8; font-size: 14px;">No recent payments recorded.</div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+    <div class="submit-row">
+        <a href="{% url 'admin:finance_coursefee_changelist' %}" class="button" style="color: #475569; padding: 8px 16px; border: 1px solid #d9e1ea; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">&laquo; Back to Course Fees</a>
+        {% if has_change_permission %}
+        <a href="{% url 'admin:finance_coursefee_change' original.pk %}" class="button" style="color: #fff; background: #1d4f82; padding: 8px 16px; border: 0; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">Edit</a>
+        {% endif %}
+    </div>
+{% endblock %}

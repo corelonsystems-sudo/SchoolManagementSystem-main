@@ -96,11 +96,13 @@ class ApplicationAdmin(admin.ModelAdmin):
             path('<int:application_id>/reject/', self.admin_site.admin_view(self.reject_application_view), name='reject_application'),
             path('import-excel/', self.admin_site.admin_view(self.import_excel_view), name='import_applications_excel'),
             path('download-template/', self.admin_site.admin_view(self.download_template_view), name='download_application_template'),
+            path('bulk-add-old/', self.admin_site.admin_view(self.bulk_add_old_view), name='bulk_add_old_applications'),
         ]
         return custom_urls + urls
 
     def import_excel_view(self, request):
         import openpyxl
+        from io import BytesIO
         from academics.models import Course, Intake
         from datetime import datetime
         from django.http import JsonResponse
@@ -114,10 +116,11 @@ class ApplicationAdmin(admin.ModelAdmin):
                 return JsonResponse({'success': False, 'error': 'Only .xlsx or .xls files are supported.'})
 
             try:
-                wb = openpyxl.load_workbook(excel_file)
+                file_content = excel_file.read()
+                wb = openpyxl.load_workbook(BytesIO(file_content))
                 ws = wb.active
             except Exception as e:
-                return JsonResponse({'success': False, 'error': f'Error reading Excel file: {e}'})
+                return JsonResponse({'success': False, 'error': f'Error reading Excel file: {str(e)}'})
 
             rows = list(ws.iter_rows(values_only=True))
             if len(rows) < 2:
@@ -234,12 +237,23 @@ class ApplicationAdmin(admin.ModelAdmin):
                         error_rows.append(f'Row {row_num}: Intake not found.')
                         continue
 
-                    # Parse date_of_birth
+                    # Parse date_of_birth - handle multiple formats
                     dob_raw = get_val('date_of_birth')
+                    dob = None
                     if isinstance(row[col_indices['date_of_birth']], datetime):
                         dob = row[col_indices['date_of_birth']].date()
-                    else:
-                        dob = datetime.strptime(dob_raw, '%Y-%m-%d').date()
+                    elif dob_raw:
+                        # Try multiple date formats
+                        date_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y', '%Y/%m/%d']
+                        for fmt in date_formats:
+                            try:
+                                dob = datetime.strptime(dob_raw, fmt).date()
+                                break
+                            except ValueError:
+                                continue
+                        if not dob:
+                            error_rows.append(f'Row {row_num}: Invalid date format "{dob_raw}". Use YYYY-MM-DD.')
+                            continue
 
                     # Validate gender
                     gender_val = get_val('gender').upper()
@@ -283,7 +297,7 @@ class ApplicationAdmin(admin.ModelAdmin):
                     )
                     created_count += 1
                 except Exception as e:
-                    error_rows.append(f'Row {row_num}: {e}')
+                    error_rows.append(f'Row {row_num}: {str(e)}')
 
             result = {'success': True, 'created_count': created_count}
             if error_rows:
@@ -382,6 +396,102 @@ class ApplicationAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="application_import_template.xlsx"'
         wb.save(response)
         return response
+
+    def bulk_add_old_view(self, request):
+        from academics.models import Course, Intake
+        from datetime import datetime
+        from django.http import JsonResponse
+
+        courses = Course.objects.all().order_by('name')
+        intakes = Intake.objects.all().select_related('academic_year').order_by('-start_date')
+        status_choices = Application.STATUS_CHOICES
+
+        if request.method == 'POST':
+            row_count = int(request.POST.get('row_count', 0))
+            created_count = 0
+            errors = []
+
+            for i in range(row_count):
+                first_name = request.POST.get(f'first_name_{i}', '').strip()
+                last_name = request.POST.get(f'last_name_{i}', '').strip()
+
+                if not first_name and not last_name:
+                    continue
+
+                try:
+                    course_id = request.POST.get(f'course_{i}')
+                    intake_id = request.POST.get(f'intake_{i}')
+
+                    if not course_id or not intake_id:
+                        errors.append(f'Row {i+1}: Course and Intake are required.')
+                        continue
+
+                    dob_str = request.POST.get(f'date_of_birth_{i}', '').strip()
+                    dob = None
+                    if dob_str:
+                        date_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y']
+                        for fmt in date_formats:
+                            try:
+                                dob = datetime.strptime(dob_str, fmt).date()
+                                break
+                            except ValueError:
+                                continue
+
+                    gender = request.POST.get(f'gender_{i}', '').strip().upper()
+                    if gender and gender not in ('M', 'F'):
+                        if gender.startswith('M'):
+                            gender = 'M'
+                        elif gender.startswith('F'):
+                            gender = 'F'
+
+                    status = request.POST.get(f'status_{i}', 'PENDING')
+                    if status not in dict(status_choices):
+                        status = 'PENDING'
+
+                    Application.objects.create(
+                        first_name=first_name,
+                        middle_name=request.POST.get(f'middle_name_{i}', '').strip(),
+                        last_name=last_name,
+                        date_of_birth=dob,
+                        gender=gender or 'M',
+                        religion=request.POST.get(f'religion_{i}', '').strip(),
+                        nationality=request.POST.get(f'nationality_{i}', '').strip(),
+                        birth_district=request.POST.get(f'birth_district_{i}', '').strip(),
+                        subcounty=request.POST.get(f'subcounty_{i}', '').strip(),
+                        parish=request.POST.get(f'parish_{i}', '').strip(),
+                        village=request.POST.get(f'village_{i}', '').strip(),
+                        phone=request.POST.get(f'phone_{i}', '').strip(),
+                        email=request.POST.get(f'email_{i}', '').strip(),
+                        father_name=request.POST.get(f'father_name_{i}', '').strip(),
+                        father_phone=request.POST.get(f'father_phone_{i}', '').strip(),
+                        mother_name=request.POST.get(f'mother_name_{i}', '').strip(),
+                        mother_phone=request.POST.get(f'mother_phone_{i}', '').strip(),
+                        sponsor_name=request.POST.get(f'sponsor_name_{i}', '').strip(),
+                        former_school=request.POST.get(f'former_school_{i}', '').strip(),
+                        former_school_district=request.POST.get(f'former_school_district_{i}', '').strip(),
+                        course_id=course_id,
+                        intake_id=intake_id,
+                        year_of_admission=request.POST.get(f'year_of_admission_{i}', '').strip(),
+                        NSIN=request.POST.get(f'NSIN_{i}', '').strip(),
+                        status=status,
+                    )
+                    created_count += 1
+                except Exception as e:
+                    errors.append(f'Row {i+1}: {str(e)}')
+
+            result = {'success': True, 'created_count': created_count}
+            if errors:
+                result['errors'] = errors[:10]
+                result['error_count'] = len(errors)
+            return JsonResponse(result)
+
+        context = {
+            'opts': self.model._meta,
+            'courses': courses,
+            'intakes': intakes,
+            'status_choices': status_choices,
+        }
+        return render(request, 'admin/admissions/application/bulk_add_old_partial.html', context)
 
     def admit_application_view(self, request, application_id):
         from django.shortcuts import get_object_or_404

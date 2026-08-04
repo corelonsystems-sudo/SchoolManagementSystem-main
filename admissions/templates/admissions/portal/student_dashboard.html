@@ -1,0 +1,461 @@
+{% load portal_extras %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - KIHS Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1a4d80; --primary-dark: #153a5e; --sidebar-bg: #1e3a5f;
+            --sidebar-hover: #2a4f7c; --content-bg: #f0f2f5; --card-bg: #fff;
+            --text-dark: #1e293b; --text-muted: #64748b; --text-light: #94a3b8;
+            --border: #e2e8f0; --green: #16a34a; --green-bg: #dcfce7;
+            --red: #dc2626; --red-bg: #fee2e2; --yellow: #ca8a04;
+            --yellow-bg: #fef9c3; --blue-bg: #dbeafe;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--content-bg); min-height: 100vh; color: var(--text-dark); }
+        .topbar { background: var(--primary); color: #fff; height: 60px; display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .topbar-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+        .topbar-logo .logo-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+        .topbar-user { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .topbar-user .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; overflow: hidden; }
+        .topbar-user .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .topbar-logout { color: #fff; text-decoration: none; font-size: 13px; background: rgba(255,255,255,0.12); padding: 7px 16px; border-radius: 6px; transition: background 0.2s; }
+        .topbar-logout:hover { background: rgba(255,255,255,0.22); }
+        .mobile-menu-btn { display: none; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+        .portal-layout { display: flex; min-height: calc(100vh - 60px); }
+        .sidebar { width: 240px; background: var(--sidebar-bg); flex-shrink: 0; padding: 16px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+        .sidebar-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 12px 20px 6px; font-weight: 600; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: var(--sidebar-hover); color: #fff; }
+        .nav-item.active { background: var(--primary); color: #fff; border-left-color: #3b82f6; }
+        .nav-item .nav-icon { width: 20px; text-align: center; font-size: 16px; flex-shrink: 0; }
+        .nav-item .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+        .main-content { flex: 1; padding: 24px 30px; overflow-x: auto; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--card-bg); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px; }
+        .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .stat-card .stat-icon.blue { background: var(--blue-bg); color: var(--primary); }
+        .stat-card .stat-icon.green { background: var(--green-bg); color: var(--green); }
+        .stat-card .stat-icon.red { background: var(--red-bg); color: var(--red); }
+        .stat-card .stat-icon.purple { background: #f3e8ff; color: #7c3aed; }
+        .stat-card .stat-info .stat-value { font-size: 22px; font-weight: 700; }
+        .stat-card .stat-info .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .card { background: var(--card-bg); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .card-header h3 { font-size: 16px; color: var(--primary); }
+        .card-body { padding: 20px; }
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .profile-item { padding: 12px 16px; background: #f8fafc; border-radius: 8px; }
+        .profile-item .label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .profile-item .value { font-size: 15px; font-weight: 600; }
+        .badge { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600; display: inline-block; }
+        .badge.enrolled { background: var(--green-bg); color: var(--green); }
+        .badge.pending { background: var(--yellow-bg); color: var(--yellow); }
+        .badge.deferred { background: var(--red-bg); color: var(--red); }
+        .badge.completed { background: var(--blue-bg); color: var(--primary); }
+        .badge.withdrawn { background: #e2e8f0; color: #475569; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table th { text-align: left; padding: 10px 14px; background: #f8fafc; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+        table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
+        table tr:last-child td { border-bottom: none; }
+        table tr:hover td { background: #f8fafc; }
+        .enrollment-block { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .enrollment-block:last-child { margin-bottom: 0; }
+        .enrollment-header { background: #f8fafc; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .enrollment-header h4 { font-size: 14px; color: var(--primary); }
+        .avg-badge { font-size: 13px; font-weight: 600; padding: 3px 12px; border-radius: 6px; }
+        .avg-badge.good { background: var(--green-bg); color: var(--green); }
+        .avg-badge.avg { background: var(--yellow-bg); color: var(--yellow); }
+        .avg-badge.poor { background: var(--red-bg); color: var(--red); }
+        .avg-badge.none { background: #e2e8f0; color: var(--text-muted); }
+        .marks-table th, .marks-table td { font-size: 13px; }
+        .marks-table .total-col { font-weight: 600; color: var(--primary); }
+        .ledger-block { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .ledger-block:last-child { margin-bottom: 0; }
+        .ledger-header { background: #f8fafc; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+        .ledger-header h4 { font-size: 14px; color: var(--primary); }
+        .ledger-header .ledger-meta { font-size: 12px; color: var(--text-muted); }
+        .balance-badge { font-size: 13px; font-weight: 600; padding: 3px 12px; border-radius: 6px; }
+        .balance-badge.paid { background: var(--green-bg); color: var(--green); }
+        .balance-badge.owed { background: var(--red-bg); color: var(--red); }
+        .ledger-summary { display: flex; gap: 24px; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+        .ledger-summary .summary-item .lbl { color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+        .ledger-summary .summary-item .val { font-weight: 700; font-size: 15px; }
+        .ledger-summary .summary-item .val.green { color: var(--green); }
+        .ledger-summary .summary-item .val.red { color: var(--red); }
+        .payment-history { padding: 12px 16px; }
+        .payment-history h5 { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 14px; }
+        .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: 1fr 1fr; } .profile-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            .sidebar { position: fixed; left: -260px; top: 60px; width: 240px; z-index: 200; transition: left 0.3s; height: calc(100vh - 60px); }
+            .sidebar.open { left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <button class="mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
+        <div class="topbar-logo">
+            <span class="logo-icon">&#127891;</span>
+            <span>Student Portal</span>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-user">
+                <div class="user-avatar">
+                    {% if adm_student.passport_photo %}
+                        <img src="{{ adm_student.passport_photo.url }}" alt="Photo">
+                    {% else %}
+                        {{ adm_student.first_name|first }}{{ adm_student.last_name|first }}
+                    {% endif %}
+                </div>
+                <span>{{ adm_student.first_name }} {{ adm_student.last_name }}</span>
+            </div>
+            <a href="{% url 'student_logout' %}" class="topbar-logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- PORTAL LAYOUT -->
+    <div class="portal-layout">
+        <!-- SIDEBAR -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-section-label">Main</div>
+            <a class="nav-item active" data-section="dashboard">
+                <span class="nav-icon">&#128375;</span> Dashboard
+            </a>
+            <a class="nav-item" data-section="profile">
+                <span class="nav-icon">&#128100;</span> My Profile
+            </a>
+            <div class="sidebar-section-label">Academics</div>
+            <a class="nav-item" data-section="enrollment">
+                <span class="nav-icon">&#128218;</span> Enrollment History
+            </a>
+            <a class="nav-item" data-section="performance">
+                <span class="nav-icon">&#128202;</span> Performance
+            </a>
+            <div class="sidebar-section-label">Finance</div>
+            <a class="nav-item" data-section="ledgers">
+                <span class="nav-icon">&#128221;</span> Ledgers
+                {% if ledger_data %}<span class="nav-badge">{{ ledger_data|length }}</span>{% endif %}
+            </a>
+            <a class="nav-item" data-section="payments">
+                <span class="nav-icon">&#128176;</span> Payments
+            </a>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- DASHBOARD SECTION -->
+            <div id="section-dashboard" class="content-section active">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">&#128218;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">{{ enrollment_data|length }}</div>
+                            <div class="stat-label">Enrollments</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">&#128221;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">{{ ledger_data|length }}</div>
+                            <div class="stat-label">Ledgers</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">&#128176;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">{{ grand_total_paid|floatformat:0 }}</div>
+                            <div class="stat-label">Total Paid (UGX)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">&#9888;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">{{ grand_total_balance|floatformat:0 }}</div>
+                            <div class="stat-label">Outstanding (UGX)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3>Recent Enrollments</h3></div>
+                    <div class="card-body">
+                        {% if enrollment_data %}
+                            <table>
+                                <thead><tr><th>Year</th><th>Semester</th><th>Units</th><th>Marks Recorded</th><th>Average</th></tr></thead>
+                                <tbody>
+                                    {% for ed in enrollment_data|slice:":5" %}
+                                    <tr>
+                                        <td>{{ ed.enrollment.study_year.year|default:"N/A" }}</td>
+                                        <td>Semester {{ ed.enrollment.semester.semester|default:"N/A" }}</td>
+                                        <td>{{ ed.unit_count }}</td>
+                                        <td>{{ ed.marks_count }} / {{ ed.unit_count }}</td>
+                                        <td>{% if ed.average_score %}<strong>{{ ed.average_score }}%</strong>{% else %}<span style="color:var(--text-light)">No marks</span>{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-state">No enrollment records yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3>Fee Summary</h3></div>
+                    <div class="card-body">
+                        {% if ledger_data %}
+                            <table>
+                                <thead><tr><th>Ledger</th><th>Year / Semester</th><th>Required</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    {% for ld in ledger_data %}
+                                    <tr>
+                                        <td>{{ ld.ledger.ledger_number }}</td>
+                                        <td>{{ ld.ledger.study_year.year|default:"N/A" }} / Sem {{ ld.ledger.semester.semester|default:"N/A" }}</td>
+                                        <td>{{ ld.total_required|floatformat:0 }} UGX</td>
+                                        <td>{{ ld.total_paid|floatformat:0 }} UGX</td>
+                                        <td>{{ ld.total_balance|floatformat:0 }} UGX</td>
+                                        <td>{% if ld.total_balance <= 0 %}<span class="badge enrolled">Fully Paid</span>{% else %}<span class="badge deferred">Owes {{ ld.total_balance|floatformat:0 }}</span>{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-state">No fee ledgers found.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE SECTION -->
+            <div id="section-profile" class="content-section">
+                <h1 class="page-title">My Profile</h1>
+                <div class="card">
+                    <div class="card-header"><h3>Personal Information</h3></div>
+                    <div class="card-body">
+                        <div class="profile-grid">
+                            <div class="profile-item"><div class="label">First Name</div><div class="value">{{ adm_student.first_name|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Middle Name</div><div class="value">{{ adm_student.middle_name|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Last Name</div><div class="value">{{ adm_student.last_name|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Admission Number</div><div class="value">{{ adm_student.admission_number|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Email</div><div class="value">{{ adm_student.email|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Phone</div><div class="value">{{ adm_student.phone|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Course</div><div class="value">{{ adm_student.course.name|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Enrollment Status</div><div class="value"><span class="badge {{ adm_student.enrollment_status|lower }}">{{ adm_student.get_enrollment_status_display }}</span></div></div>
+                            {% if adm_student.NSIN %}
+                            <div class="profile-item"><div class="label">NSIN</div><div class="value">{{ adm_student.NSIN }}</div></div>
+                            {% endif %}
+                            {% if acad_student %}
+                            <div class="profile-item"><div class="label">Academic Year</div><div class="value">{{ acad_student.year|default:"-" }}</div></div>
+                            <div class="profile-item"><div class="label">Semester</div><div class="value">{{ acad_student.semester|default:"-" }}</div></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENROLLMENT SECTION -->
+            <div id="section-enrollment" class="content-section">
+                <h1 class="page-title">Enrollment History</h1>
+                <div class="card">
+                    <div class="card-header"><h3>All Enrollments</h3></div>
+                    <div class="card-body">
+                        {% if enrollment_data %}
+                            {% for ed in enrollment_data %}
+                                <div class="enrollment-block">
+                                    <div class="enrollment-header">
+                                        <h4>{{ ed.enrollment.study_year.year|default:"N/A" }} - Semester {{ ed.enrollment.semester.semester|default:"N/A" }}</h4>
+                                        <span class="avg-badge {% if ed.average_score %}{% if ed.average_score >= 70 %}good{% elif ed.average_score >= 50 %}avg{% else %}poor{% endif %}{% else %}none{% endif %}">
+                                            {% if ed.average_score %}Avg: {{ ed.average_score }}%{% else %}No marks{% endif %}
+                                        </span>
+                                    </div>
+                                    <table class="marks-table">
+                                        <thead><tr><th>Code</th><th>Course Unit</th><th>Test (30%)</th><th>Final (70%)</th><th>Total</th></tr></thead>
+                                        <tbody>
+                                            {% for cu in ed.course_units %}
+                                                {% with mark=ed.unit_marks|get_item:cu.id %}
+                                                <tr>
+                                                    <td>{{ cu.code }}</td>
+                                                    <td>{{ cu.name }}</td>
+                                                    <td>{% if mark %}{{ mark.test_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                    <td>{% if mark %}{{ mark.final_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                    <td class="total-col">{% if mark %}{{ mark.total_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                </tr>
+                                                {% endwith %}
+                                            {% empty %}
+                                                <tr><td colspan="5" style="text-align:center;color:var(--text-light);">No course units for this enrollment</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state"><div class="empty-icon">&#128218;</div>No enrollment records found. You will see your academic history here once you are enrolled.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE SECTION -->
+            <div id="section-performance" class="content-section">
+                <h1 class="page-title">Academic Performance</h1>
+                <div class="card">
+                    <div class="card-header"><h3>Marks & Grades</h3></div>
+                    <div class="card-body">
+                        {% if enrollment_data %}
+                            {% for ed in enrollment_data %}
+                                <div class="enrollment-block">
+                                    <div class="enrollment-header">
+                                        <h4>{{ ed.enrollment.study_year.year|default:"N/A" }} - Semester {{ ed.enrollment.semester.semester|default:"N/A" }}</h4>
+                                        <span class="avg-badge {% if ed.average_score %}{% if ed.average_score >= 70 %}good{% elif ed.average_score >= 50 %}avg{% else %}poor{% endif %}{% else %}none{% endif %}">
+                                            {% if ed.average_score %}Average: {{ ed.average_score }}%{% else %}No marks{% endif %}
+                                        </span>
+                                    </div>
+                                    <table class="marks-table">
+                                        <thead><tr><th>Code</th><th>Course Unit</th><th>Test (30%)</th><th>Final (70%)</th><th>Total</th></tr></thead>
+                                        <tbody>
+                                            {% for cu in ed.course_units %}
+                                                {% with mark=ed.unit_marks|get_item:cu.id %}
+                                                <tr>
+                                                    <td>{{ cu.code }}</td>
+                                                    <td>{{ cu.name }}</td>
+                                                    <td>{% if mark %}{{ mark.test_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                    <td>{% if mark %}{{ mark.final_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                    <td class="total-col">{% if mark %}{{ mark.total_marks|default:"-" }}{% else %}-{% endif %}</td>
+                                                </tr>
+                                                {% endwith %}
+                                            {% empty %}
+                                                <tr><td colspan="5" style="text-align:center;color:var(--text-light);">No course units</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state"><div class="empty-icon">&#128202;</div>No academic performance records found.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEDGERS SECTION -->
+            <div id="section-ledgers" class="content-section">
+                <h1 class="page-title">Fee Ledgers</h1>
+                <div class="card">
+                    <div class="card-header"><h3>All Ledgers</h3></div>
+                    <div class="card-body">
+                        {% if ledger_data %}
+                            {% for ld in ledger_data %}
+                                <div class="ledger-block">
+                                    <div class="ledger-header">
+                                        <div>
+                                            <h4>{{ ld.ledger.ledger_number }}</h4>
+                                            <div class="ledger-meta">{{ ld.ledger.study_year.year|default:"N/A" }} &middot; Semester {{ ld.ledger.semester.semester|default:"N/A" }} &middot; Generated: {{ ld.ledger.generated_on|date:"M d, Y" }}</div>
+                                        </div>
+                                        <span class="balance-badge {% if ld.total_balance <= 0 %}paid{% else %}owed{% endif %}">
+                                            {% if ld.total_balance <= 0 %}Fully Paid{% else %}Balance: {{ ld.total_balance|floatformat:0 }} UGX{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="ledger-summary">
+                                        <div class="summary-item"><div class="lbl">Required</div><div class="val">{{ ld.total_required|floatformat:0 }} UGX</div></div>
+                                        <div class="summary-item"><div class="lbl">Paid</div><div class="val green">{{ ld.total_paid|floatformat:0 }} UGX</div></div>
+                                        <div class="summary-item"><div class="lbl">Balance</div><div class="val {% if ld.total_balance > 0 %}red{% else %}green{% endif %}">{{ ld.total_balance|floatformat:0 }} UGX</div></div>
+                                    </div>
+                                    <table>
+                                        <thead><tr><th>Fee Type</th><th>Required</th><th>Paid</th><th>Balance</th></tr></thead>
+                                        <tbody>
+                                            {% for b in ld.breakdowns %}
+                                            <tr>
+                                                <td>{{ b.payment_type.name }}</td>
+                                                <td>{{ b.amount|floatformat:0 }} UGX</td>
+                                                <td>{{ b.paid|floatformat:0 }} UGX</td>
+                                                <td>{{ b.balance|floatformat:0 }} UGX</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state"><div class="empty-icon">&#128221;</div>No fee ledgers found. Your ledgers will appear here once they are generated.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAYMENTS SECTION -->
+            <div id="section-payments" class="content-section">
+                <h1 class="page-title">Payment History</h1>
+                <div class="card">
+                    <div class="card-header"><h3>All Payments</h3></div>
+                    <div class="card-body">
+                        {% if ledger_data %}
+                            {% for ld in ledger_data %}
+                                <div class="ledger-block">
+                                    <div class="ledger-header">
+                                        <div>
+                                            <h4>{{ ld.ledger.ledger_number }}</h4>
+                                            <div class="ledger-meta">{{ ld.ledger.study_year.year|default:"N/A" }} &middot; Semester {{ ld.ledger.semester.semester|default:"N/A" }}</div>
+                                        </div>
+                                        <span class="balance-badge {% if ld.total_balance <= 0 %}paid{% else %}owed{% endif %}">
+                                            {% if ld.total_balance <= 0 %}Fully Paid{% else %}Balance: {{ ld.total_balance|floatformat:0 }} UGX{% endif %}
+                                        </span>
+                                    </div>
+                                    {% if ld.payment_count > 0 %}
+                                        <div class="payment-history">
+                                            <h5>Payment Records ({{ ld.payment_count }})</h5>
+                                            <table>
+                                                <thead><tr><th>Date</th><th>Payment Type</th><th>Amount</th></tr></thead>
+                                                <tbody>
+                                                    {% for payment in ld.payments %}
+                                                    <tr>
+                                                        <td>{{ payment.date|date:"M d, Y H:i" }}</td>
+                                                        <td>{{ payment.payment_type.name }}</td>
+                                                        <td>{{ payment.amount|floatformat:0 }} UGX</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <div class="empty-state" style="padding:20px;">No payments recorded for this ledger yet.</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state"><div class="empty-icon">&#128176;</div>No payment records found. Your payment history will appear here once payments are made.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                var section = this.dataset.section;
+                document.querySelectorAll('.content-section').forEach(function(s) { s.classList.remove('active'); });
+                document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+                document.getElementById('section-' + section).classList.add('active');
+                this.classList.add('active');
+                if (window.innerWidth <= 768) { document.querySelector('.sidebar').classList.remove('open'); }
+            });
+        });
+    </script>
+</body>
+</html>

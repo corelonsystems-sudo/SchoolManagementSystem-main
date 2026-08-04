@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update My Details - KIHS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f4f8;
+            color: #333;
+            padding: 20px;
+        }
+        .form-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .form-header {
+            background: linear-gradient(135deg, #1c4a7a, #2d6a9f);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+        .form-header h1 { font-size: 22px; margin-bottom: 6px; }
+        .form-header p { font-size: 14px; opacity: 0.85; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        .back-link:hover { opacity: 1; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.2);
+        }
+        .form-body { padding: 30px; }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert-error { background: #fee; color: #c33; border: 1px solid #fcc; }
+        .alert-success { background: #efe; color: #363; border: 1px solid #cfc; }
+        .form-section { margin-bottom: 28px; }
+        .form-section h3 {
+            color: #1c4a7a;
+            font-size: 15px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid #d9e1ea;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus { outline: none; border-color: #1c4a7a; }
+        .required { color: #dc3545; }
+        .btn-submit {
+            background: #28a745;
+            color: #fff;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { background: #218838; }
+        .readonly-field {
+            padding: 10px 12px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <a href="{% url 'portal_landing' %}" class="back-link">&larr; Back to Portal</a>
+            <h1>Update My Details</h1>
+            <p>{{ student.first_name }} {{ student.last_name }} - {{ student.admission_number }}</p>
+            <span class="status-badge">Status: {{ student.get_enrollment_status_display }}</span>
+        </div>
+
+        <div class="form-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" name="first_name" value="{{ student.first_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Middle Name</label>
+                            <input type="text" name="middle_name" value="{{ student.middle_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" name="last_name" value="{{ student.last_name }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date of Birth <span class="required">*</span></label>
+                            <input type="date" name="date_of_birth" value="{{ student.date_of_birth|date:"Y-m-d" }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender <span class="required">*</span></label>
+                            <select name="gender" required>
+                                <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Religion <span class="required">*</span></label>
+                            <input type="text" name="religion" value="{{ student.religion }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nationality <span class="required">*</span></label>
+                            <input type="text" name="nationality" value="{{ student.nationality }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>NSIN</label>
+                            <input type="text" name="NSIN" value="{{ student.NSIN }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Passport Photo</label>
+                            <input type="file" name="passport_photo" accept="image/*">
+                            {% if student.passport_photo %}
+                                <p style="font-size:12px; color:#64748b; margin-top:4px;">Current photo: <a href="{{ student.passport_photo.url }}" target="_blank">View</a></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Contact Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone <span class="required">*</span></label>
+                            <input type="text" name="phone" value="{{ student.phone }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" name="email" value="{{ student.email }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Birth District <span class="required">*</span></label>
+                            <input type="text" name="birth_district" value="{{ student.birth_district }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Subcounty <span class="required">*</span></label>
+                            <input type="text" name="subcounty" value="{{ student.subcounty }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Parish <span class="required">*</span></label>
+                            <input type="text" name="parish" value="{{ student.parish }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Village <span class="required">*</span></label>
+                            <input type="text" name="village" value="{{ student.village }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Parents / Guardians</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Father's Name <span class="required">*</span></label>
+                            <input type="text" name="father_name" value="{{ student.father_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Phone <span class="required">*</span></label>
+                            <input type="text" name="father_phone" value="{{ student.father_phone }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mother's Name <span class="required">*</span></label>
+                            <input type="text" name="mother_name" value="{{ student.mother_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mother's Phone <span class="required">*</span></label>
+                            <input type="text" name="mother_phone" value="{{ student.mother_phone }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Sponsor & Previous Education</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Sponsor Name <span class="required">*</span></label>
+                            <input type="text" name="sponsor_name" value="{{ student.sponsor_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Former School</label>
+                            <input type="text" name="former_school" value="{{ student.former_school }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Former School District</label>
+                            <input type="text" name="former_school_district" value="{{ student.former_school_district }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Enrollment Information (Read Only)</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Admission Number</label>
+                            <div class="readonly-field">{{ student.admission_number }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Course</label>
+                            <div class="readonly-field">{{ student.course.name }} ({{ student.course.short_name }})</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Year of Admission</label>
+                            <div class="readonly-field">{{ student.year_of_admission }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Update My Details</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

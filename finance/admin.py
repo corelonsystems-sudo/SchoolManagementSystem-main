@@ -1,5 +1,6 @@
 from django.contrib import admin
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from .models import Payment, Ledger, CourseFee
 from academics.models import Enrollment, Student
 from datetime import datetime
@@ -55,6 +56,7 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ('enrollment__student__admission__first_name', 'enrollment__student__admission__last_name', 'payment_type')
     list_filter = ('payment_type', 'date')
     readonly_fields = ('ledger_view', 'form_data_view', 'payment_history_view')
+    change_list_template = 'admin/finance/payment/change_list.html'
 
     fieldsets = [
         ('Form', {
@@ -736,6 +738,20 @@ class LedgerAdmin(admin.ModelAdmin):
     list_display = ('student', 'ledger_number', 'study_year', 'semester', 'required_amount', 'total_paid_display', 'balance_display', 'generated_on', 'print_button')
     search_fields = ('student__admission__first_name', 'student__admission__last_name', 'ledger_number', 'study_year__year', 'semester__semester')
     list_filter = ('study_year', 'semester')
+    change_list_template = 'admin/finance/ledger/change_list.html'
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('reports/', self.admin_site.admin_view(self.reports_redirect_view), name='ledger_reports'),
+        ]
+        return custom_urls + urls
+
+    def reports_redirect_view(self, request):
+        from django.shortcuts import redirect
+        return redirect('/finance/reports/')
+
     # required_amount is the sum of the fee items below, so it is shown but not typed in.
     readonly_fields = ('ledger_details', 'total_paid', 'required_amount', 'balance', 'generated_on')
 
@@ -789,6 +805,7 @@ class LedgerAdmin(admin.ModelAdmin):
         full_name = f"{student.first_name} {student.last_name}"
         course = student.course.name if student.course else "No course assigned"
         NSIN = student.NSIN if student.NSIN else "No NSIN assigned"
+        admission_number = getattr(student.admission, 'admission_number', None) or "N/A"
         image_url = student.passport_photo.url if student.passport_photo else None
         payments = Payment.objects.filter(
             enrollment__student=student,
@@ -816,29 +833,49 @@ class LedgerAdmin(admin.ModelAdmin):
                 .ledger-action-print {{ background: #0b5cad; }}
                 .ledger-action-pdf {{ background: #111827; }}
                 .ledger-action-pay {{ background: #16a34a; }}
-                #ledger-printable-content {{ background: #fff; border: 1px solid #dbe3ec; box-sizing: border-box; padding: 20px; width: 100%; }}
-                .ledger-heading {{ align-items: center; border-bottom: 1px solid #dbe3ec; display: flex; justify-content: space-between; padding-bottom: 14px; }}
-                .ledger-heading h2 {{ color: #1d4f82; font-size: 18px; letter-spacing: .3px; margin: 0; text-transform: uppercase; }}
-                .ledger-generated {{ color: #64748b; font-size: 11px; margin: 0; }}
-                .ledger-student-grid {{ display: grid; gap: 18px; grid-template-columns: 132px minmax(0, 1fr); margin: 20px 0; }}
-                .ledger-photo {{ align-items: center; background: #f1f5f9; border: 1px solid #dbe3ec; display: flex; height: 132px; justify-content: center; overflow: hidden; width: 132px; }}
+                #ledger-printable-content {{ background: #fff; border: 1px solid #dbe3ec; box-sizing: border-box; padding: 0; width: 100%; overflow: hidden; }}
+                /* Institution header bar */
+                .ledger-inst-bar {{ background: #1d4f82; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; }}
+                .ledger-inst-left {{ display: flex; align-items: center; gap: 12px; }}
+                .ledger-inst-logo {{ align-items: center; background: rgba(255,255,255,0.15); border-radius: 6px; display: flex; font-size: 22px; height: 40px; justify-content: center; width: 40px; }}
+                .ledger-inst-name {{ font-size: 16px; font-weight: 700; letter-spacing: .3px; }}
+                .ledger-inst-sub {{ font-size: 11px; opacity: 0.8; margin-top: 2px; }}
+                .ledger-inst-right {{ text-align: right; }}
+                .ledger-inst-right .ledger-no {{ font-size: 13px; font-weight: 600; }}
+                .ledger-inst-right .ledger-gen {{ font-size: 11px; opacity: 0.8; margin-top: 2px; }}
+                /* Student info card */
+                .ledger-student-grid {{ display: grid; gap: 18px; grid-template-columns: 110px minmax(0, 1fr); margin: 20px 24px; }}
+                .ledger-photo {{ align-items: center; background: #f1f5f9; border: 1px solid #dbe3ec; border-radius: 6px; display: flex; height: 110px; justify-content: center; overflow: hidden; width: 110px; }}
                 .ledger-photo img {{ height: 100%; object-fit: cover; width: 100%; }}
-                .ledger-student-info h4 {{ border-bottom: 2px solid #1d4f82; color: #1d4f82; font-size: 14px; margin: 0 0 12px; padding-bottom: 7px; }}
-                .ledger-info-grid {{ display: grid; gap: 8px 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+                .ledger-student-info h4 {{ border-bottom: 2px solid #1d4f82; color: #1d4f82; font-size: 13px; margin: 0 0 10px; padding-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }}
+                .ledger-info-grid {{ display: grid; gap: 6px 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }}
                 .ledger-info-item {{ font-size: 12px; margin: 0; }}
-                .ledger-info-item strong {{ color: #64748b; display: inline-block; min-width: 70px; }}
-                .ledger-period {{ background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 12px; margin: 0 0 16px; padding: 10px 12px; }}
-                #ledger-breakdown-table {{ border-collapse: collapse; font-size: 12px; margin-top: 0; width: 100%; }}
+                .ledger-info-item strong {{ color: #64748b; display: inline-block; min-width: 90px; }}
+                /* Financial summary strip */
+                .ledger-financial-strip {{ display: flex; gap: 0; margin: 0 24px 16px; border: 1px solid #dbe3ec; border-radius: 6px; overflow: hidden; }}
+                .ledger-financial-item {{ flex: 1; padding: 12px 16px; border-right: 1px solid #dbe3ec; }}
+                .ledger-financial-item:last-child {{ border-right: 0; }}
+                .ledger-financial-item .lbl {{ color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }}
+                .ledger-financial-item .val {{ font-size: 16px; font-weight: 700; }}
+                .ledger-financial-item .val.green {{ color: #16a34a; }}
+                .ledger-financial-item .val.red {{ color: #dc2626; }}
+                .ledger-period {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; font-size: 12px; margin: 0 24px 16px; padding: 10px 14px; }}
+                #ledger-breakdown-table {{ border-collapse: collapse; font-size: 12px; margin: 0 24px 16px; width: calc(100% - 48px); }}
                 #ledger-breakdown-table th {{ background: #1d4f82; color: #fff; font-weight: 600; padding: 10px 12px; text-align: left; }}
                 #ledger-breakdown-table th:not(:first-child), #ledger-breakdown-table td:not(:first-child) {{ text-align: right; }}
                 #ledger-breakdown-table td {{ border-bottom: 1px solid #e2e8f0; padding: 10px 12px; }}
                 #ledger-breakdown-table tbody tr:nth-child(even) {{ background: #f8fafc; }}
                 #ledger-breakdown-table tfoot td {{ background: #f1f5f9; border-bottom: 0; font-weight: 600; padding: 10px 12px; }}
-                .ledger-thank-you {{ color: #64748b; font-size: 12px; margin: 18px 0 0; text-align: center; }}
+                .ledger-thank-you {{ color: #64748b; font-size: 12px; margin: 18px 24px 0; text-align: center; }}
                 @media (max-width: 700px) {{
                     .ledger-actions {{ justify-content: flex-start; flex-wrap: wrap; }}
                     .ledger-student-grid, .ledger-info-grid {{ grid-template-columns: 1fr; }}
+                    .ledger-financial-strip {{ flex-direction: column; }}
+                    .ledger-financial-item {{ border-right: 0; border-bottom: 1px solid #dbe3ec; }}
+                    .ledger-financial-item:last-child {{ border-bottom: 0; }}
                     .ledger-photo {{ height: 96px; width: 96px; }}
+                    .ledger-inst-bar {{ flex-direction: column; gap: 8px; text-align: center; }}
+                    .ledger-inst-right {{ text-align: center; }}
                     #ledger-breakdown-table {{ display: block; overflow-x: auto; white-space: nowrap; }}
                 }}
                 @media print {{
@@ -853,25 +890,48 @@ class LedgerAdmin(admin.ModelAdmin):
                     <button type="button" class="ledger-action-pay" onclick="document.getElementById('ledger-pay-modal').style.display='block';">Pay</button>
                 </div>
                 <div id="ledger-printable-content">
-                    <div class="ledger-heading">
-                        <h2>Student Ledger</h2>
-                        <p class="ledger-generated">Generated on: {datetime.now().strftime('%Y-%m-%d')}</p>
+                    <div class="ledger-inst-bar">
+                        <div class="ledger-inst-left">
+                            <div class="ledger-inst-logo">&#127891;</div>
+                            <div>
+                                <div class="ledger-inst-name">Kampala Institute of Health Sciences</div>
+                                <div class="ledger-inst-sub">Student Fee Ledger</div>
+                            </div>
+                        </div>
+                        <div class="ledger-inst-right">
+                            <div class="ledger-no">{obj.ledger_number}</div>
+                            <div class="ledger-gen">Generated: {datetime.now().strftime('%Y-%m-%d')}</div>
+                        </div>
                     </div>
                     <div class="ledger-student-grid">
                         <div class="ledger-photo">
-                            {'<img src="{}" alt="{}">'.format(image_url, full_name) if image_url else '<span>No photo</span>'}
+                            {'<img src="{}" alt="{}">'.format(image_url, full_name) if image_url else '<span style="color:#94a3b8;font-size:11px;">No photo</span>'}
                         </div>
                         <div class="ledger-student-info">
-                            <h4>STUDENT DETAILS</h4>
+                            <h4>Student Details</h4>
                             <div class="ledger-info-grid">
                                 <p class="ledger-info-item"><strong>Name:</strong> {full_name}</p>
+                                <p class="ledger-info-item"><strong>Adm No:</strong> {admission_number}</p>
                                 <p class="ledger-info-item"><strong>Course:</strong> {course}</p>
                                 <p class="ledger-info-item"><strong>NSIN:</strong> {NSIN}</p>
-                                <p class="ledger-info-item"><strong>Ledger:</strong> {obj.ledger_number}</p>
                             </div>
                         </div>
                     </div>
-                    <p class="ledger-period"><strong>Academic period:</strong> Study Year {obj.study_year.year if obj.study_year else 'N/A'} &nbsp;·&nbsp; Semester {obj.semester.semester}</p>
+                    <div class="ledger-financial-strip">
+                        <div class="ledger-financial-item">
+                            <div class="lbl">Required</div>
+                            <div class="val">{obj.required_amount:,.2f} UGX</div>
+                        </div>
+                        <div class="ledger-financial-item">
+                            <div class="lbl">Total Paid</div>
+                            <div class="val green">{obj.total_paid:,.2f} UGX</div>
+                        </div>
+                        <div class="ledger-financial-item">
+                            <div class="lbl">Balance</div>
+                            <div class="val {'green' if obj.balance <= 0 else 'red'}">{obj.balance:,.2f} UGX</div>
+                        </div>
+                    </div>
+                    <p class="ledger-period"><strong>Academic period:</strong> Study Year {obj.study_year.year if obj.study_year else 'N/A'} &nbsp;&middot;&nbsp; Semester {obj.semester.semester}</p>
                     <table id="ledger-breakdown-table">
                         <thead>
                             <tr>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1a4d80; --primary-dark: #153a5e; --sidebar-bg: #1e3a5f;
+            --border: #e2e8f0; --text-muted: #64748b; --text-light: #94a3b8;
+            --red: #dc2626; --red-bg: #fee2e2;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--sidebar-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .topbar {
+            background: var(--primary);
+            color: #fff;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .topbar-logo .logo-icon {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .login-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-wrapper {
+            max-width: 440px;
+            width: 100%;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .login-header {
+            background: var(--primary);
+            color: #fff;
+            padding: 28px 30px;
+            text-align: center;
+        }
+        .login-header h1 { font-size: 22px; margin-bottom: 6px; }
+        .login-header p { font-size: 14px; opacity: 0.85; }
+        .login-body { padding: 30px; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d9e1ea;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,77,128,0.1);
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert.error {
+            background: var(--red-bg);
+            color: var(--red);
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-logo">
+            <span class="logo-icon">&#127891;</span>
+            <span>Student Portal</span>
+        </div>
+    </div>
+    <div class="login-area">
+        <div class="login-wrapper">
+            <div class="login-header">
+                <h1>Student Login</h1>
+                <p>View your enrollment history, performance, ledgers & payments</p>
+            </div>
+            <div class="login-body">
+                <a href="{% url 'portal_landing' %}" class="back-link">&larr; Back to Portal</a>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert error">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="admission_number">Admission Number</label>
+                        <input type="text" id="admission_number" name="admission_number" placeholder="e.g. 001-DCS" required>
+                    </div>
+                    <button type="submit" class="btn">Login to Dashboard</button>
+                </form>
+
+                <div class="login-footer">
+                    <p>Use the email and admission number you registered with.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

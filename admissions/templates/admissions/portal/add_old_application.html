@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Old Application - KIHS Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1c4a7a 0%, #2d6a9f 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .form-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .form-header {
+            background: #6c5ce7;
+            color: #fff;
+            padding: 24px 30px;
+        }
+        .form-header h1 { font-size: 24px; margin-bottom: 6px; }
+        .form-header p { font-size: 14px; opacity: 0.9; }
+        .form-body { padding: 30px; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #6c5ce7;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .section {
+            margin-bottom: 28px;
+        }
+        .section h2 {
+            font-size: 16px;
+            color: #1c4a7a;
+            margin-bottom: 14px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+        }
+        .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+        .form-group label .req { color: #dc3545; }
+        .form-group input,
+        .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #d9e1ea;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #6c5ce7;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #5b4bd1; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .info-box {
+            background: #f0e8fd;
+            border: 1px solid #d4c4f7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #6c5ce7;
+            line-height: 1.5;
+        }
+        @media (max-width: 600px) {
+            .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-wrapper">
+        <div class="form-header">
+            <h1>Add Old Application</h1>
+            <p>Register a historical application record from before our digital system</p>
+        </div>
+        <div class="form-body">
+            <a href="{% url 'portal_landing' %}" class="back-link">&larr; Back to Portal</a>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="info-box">
+                Use this form to register an old application that was processed before the digital system was in place.
+                All submitted records will be reviewed by the admissions office.
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="section">
+                    <h2>Personal Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name <span class="req">*</span></label>
+                            <input type="text" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Middle Name</label>
+                            <input type="text" name="middle_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="req">*</span></label>
+                            <input type="text" name="last_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="text" name="date_of_birth" placeholder="YYYY-MM-DD or DD/MM/YYYY">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="gender">
+                                <option value="">-- Select --</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Religion</label>
+                            <input type="text" name="religion">
+                        </div>
+                        <div class="form-group">
+                            <label>Nationality</label>
+                            <input type="text" name="nationality">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Place of Origin</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Birth District</label>
+                            <input type="text" name="birth_district">
+                        </div>
+                        <div class="form-group">
+                            <label>Subcounty</label>
+                            <input type="text" name="subcounty">
+                        </div>
+                        <div class="form-group">
+                            <label>Parish</label>
+                            <input type="text" name="parish">
+                        </div>
+                        <div class="form-group">
+                            <label>Village</label>
+                            <input type="text" name="village">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Contact Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Parent / Guardian Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Father's Name</label>
+                            <input type="text" name="father_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Phone</label>
+                            <input type="text" name="father_phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Mother's Name</label>
+                            <input type="text" name="mother_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Mother's Phone</label>
+                            <input type="text" name="mother_phone">
+                        </div>
+                        <div class="form-group full">
+                            <label>Sponsor Name</label>
+                            <input type="text" name="sponsor_name">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Previous Education</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Former School</label>
+                            <input type="text" name="former_school">
+                        </div>
+                        <div class="form-group">
+                            <label>Former School District</label>
+                            <input type="text" name="former_school_district">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Academic Information</h2>
+                    <div class="form-grid three">
+                        <div class="form-group">
+                            <label>Course <span class="req">*</span></label>
+                            <select name="course" required>
+                                <option value="">-- Select Course --</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.name }} ({{ course.short_name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Intake <span class="req">*</span></label>
+                            <select name="intake" required>
+                                <option value="">-- Select Intake --</option>
+                                {% for intake in all_intakes %}
+                                    <option value="{{ intake.id }}">{{ intake.name }} ({{ intake.academic_year.name|default:"N/A" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Year of Admission</label>
+                            <input type="text" name="year_of_admission" placeholder="e.g. 2020">
+                        </div>
+                    </div>
+                    <div class="form-grid" style="margin-top: 14px;">
+                        <div class="form-group">
+                            <label>NSIN</label>
+                            <input type="text" name="NSIN">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Old Application</button>
+                    <a href="{% url 'portal_landing' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

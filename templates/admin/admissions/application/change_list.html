@@ -3,25 +3,28 @@
 {% block extrahead %}
     {{ block.super }}
     <style>
-        .import-overlay {
+        .import-overlay, .bulk-overlay {
             position: fixed !important; top: 0 !important; left: 0 !important;
             width: 100% !important; height: 100% !important;
             background: rgba(0,0,0,0.5) !important; z-index: 999999 !important; display: none !important;
         }
-        .import-overlay.active { display: block !important; }
-        .import-dialog {
+        .import-overlay.active, .bulk-overlay.active { display: block !important; }
+        .import-dialog, .bulk-dialog {
             position: fixed !important; top: 50% !important; left: 50% !important;
             transform: translate(-50%, -50%) !important;
             background: #fff !important; border-radius: 10px !important;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3) !important;
-            width: 80vw !important; max-width: 800px !important; max-height: 85vh !important;
             display: none !important; flex-direction: column !important;
             z-index: 1000000 !important; border-top: 4px solid #1c4a7a !important;
         }
-        .import-dialog.active { display: flex !important; }
-        .import-header { background: #1c4a7a !important; padding: 16px 24px !important; border-radius: 10px 10px 0 0 !important; flex-shrink: 0 !important; }
-        .import-header h2 { margin: 0 !important; font-size: 1.2rem !important; color: #fff !important; }
-        .import-body { padding: 24px !important; overflow-y: auto !important; flex: 1 !important; }
+        .import-dialog.active, .bulk-dialog.active { display: flex !important; }
+        .import-dialog { width: 80vw !important; max-width: 800px !important; max-height: 85vh !important; }
+        .bulk-dialog { width: 95vw !important; max-width: 1400px !important; max-height: 90vh !important; }
+        .import-header, .bulk-header { background: #1c4a7a !important; padding: 16px 24px !important; border-radius: 10px 10px 0 0 !important; flex-shrink: 0 !important; display: flex; justify-content: space-between; align-items: center; }
+        .import-header h2, .bulk-header h2 { margin: 0 !important; font-size: 1.2rem !important; color: #fff !important; }
+        .bulk-header .close-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 20px; cursor: pointer; border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .bulk-header .close-btn:hover { background: rgba(255,255,255,0.3); }
+        .import-body, .bulk-body { padding: 24px !important; overflow-y: auto !important; flex: 1 !important; }
         .import-msg { margin-top: 12px !important; padding: 10px 12px !important; border-radius: 6px !important; font-size: 0.85rem !important; display: none !important; }
         .import-msg.success { background: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
         .import-msg.error { background: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
@@ -30,6 +33,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             var toolbar = document.querySelector('.object-tools');
             var importUrl = '{% url 'admin:import_applications_excel' %}';
+            var bulkUrl = '{% url 'admin:bulk_add_old_applications' %}';
+
+            function getCookie(name) {
+                var v = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var c = cookies[i].trim();
+                        if (c.substring(0, name.length + 1) === (name + '=')) {
+                            v = decodeURIComponent(c.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return v;
+            }
+
+            /* === Import Excel Modal === */
             if (toolbar && importUrl) {
                 var btn = document.createElement('button');
                 btn.type = 'button';
@@ -50,7 +71,7 @@
                 document.body.appendChild(overlay);
                 document.body.appendChild(dialog);
 
-                function openModal() {
+                function openImportModal() {
                     overlay.classList.add('active');
                     dialog.classList.add('active');
                     document.getElementById('import-body').innerHTML = '<div style="text-align:center;padding:30px;">Loading...</div>';
@@ -58,7 +79,6 @@
                         .then(function(r) { return r.text(); })
                         .then(function(html) {
                             document.getElementById('import-body').innerHTML = html;
-                            // Attach form submit handler
                             var form = document.getElementById('import-form');
                             if (form) {
                                 form.addEventListener('submit', function(e) {
@@ -99,10 +119,9 @@
                                     });
                                 });
                             }
-                            // Attach cancel button handler
                             var cancelBtn = document.getElementById('import-cancel');
                             if (cancelBtn) {
-                                cancelBtn.addEventListener('click', closeModal);
+                                cancelBtn.addEventListener('click', closeImportModal);
                             }
                         })
                         .catch(function() {
@@ -110,34 +129,238 @@
                         });
                 }
 
-                function closeModal() {
+                function closeImportModal() {
                     overlay.classList.remove('active');
                     dialog.classList.remove('active');
                 }
 
-                btn.addEventListener('click', openModal);
-                overlay.addEventListener('click', closeModal);
+                btn.addEventListener('click', openImportModal);
+                overlay.addEventListener('click', closeImportModal);
             }
 
-            function getCookie(name) {
-                var v = null;
-                if (document.cookie && document.cookie !== '') {
-                    var cookies = document.cookie.split(';');
-                    for (var i = 0; i < cookies.length; i++) {
-                        var c = cookies[i].trim();
-                        if (c.substring(0, name.length + 1) === (name + '=')) {
-                            v = decodeURIComponent(c.substring(name.length + 1));
-                            break;
+            /* === Add Old Applications Modal === */
+            if (toolbar && bulkUrl) {
+                var bulkBtn = document.createElement('button');
+                bulkBtn.type = 'button';
+                bulkBtn.textContent = 'Add Old Applications';
+                bulkBtn.className = 'button';
+                bulkBtn.style.cssText = 'background-color:#6c5ce7;color:#fff;padding:6px 14px;border-radius:4px;';
+                var bulkLi = document.createElement('li');
+                bulkLi.appendChild(bulkBtn);
+                toolbar.appendChild(bulkLi);
+
+                var bulkOverlay = document.createElement('div');
+                bulkOverlay.className = 'bulk-overlay';
+                bulkOverlay.id = 'bulk-overlay';
+
+                var bulkDialog = document.createElement('div');
+                bulkDialog.className = 'bulk-dialog';
+                bulkDialog.id = 'bulk-dialog';
+                bulkDialog.innerHTML = '<div class="bulk-header"><h2>Add Old Applications</h2><button type="button" class="close-btn" id="bulk-close-x">&times;</button></div><div class="bulk-body" id="bulk-body"><div style="text-align:center;padding:30px;">Loading...</div></div>';
+
+                document.body.appendChild(bulkOverlay);
+                document.body.appendChild(bulkDialog);
+
+                function openBulkModal() {
+                    bulkOverlay.classList.add('active');
+                    bulkDialog.classList.add('active');
+                    document.getElementById('bulk-body').innerHTML = '<div style="text-align:center;padding:30px;">Loading...</div>';
+                    fetch(bulkUrl)
+                        .then(function(r) { return r.text(); })
+                        .then(function(html) {
+                            document.getElementById('bulk-body').innerHTML = html;
+                            initBulkForm();
+                        })
+                        .catch(function() {
+                            document.getElementById('bulk-body').innerHTML = '<div style="text-align:center;padding:30px;">Error loading form.</div>';
+                        });
+                }
+
+                function closeBulkModal() {
+                    bulkOverlay.classList.remove('active');
+                    bulkDialog.classList.remove('active');
+                }
+
+                function initBulkForm() {
+                    var rowIndex = 0;
+                    var maxRows = 50;
+
+                    var courseSrc = document.getElementById('bulk-course-source');
+                    var intakeSrc = document.getElementById('bulk-intake-source');
+                    var statusSrc = document.getElementById('bulk-status-source');
+
+                    var courseOpts = '<option value="">--</option>';
+                    if (courseSrc) {
+                        courseSrc.querySelectorAll('option').forEach(function(o) {
+                            courseOpts += '<option value="' + o.value + '">' + o.textContent + '</option>';
+                        });
+                    }
+
+                    var intakeOpts = '<option value="">--</option>';
+                    if (intakeSrc) {
+                        intakeSrc.querySelectorAll('option').forEach(function(o) {
+                            intakeOpts += '<option value="' + o.value + '">' + o.textContent + '</option>';
+                        });
+                    }
+
+                    var statusOpts = '';
+                    if (statusSrc) {
+                        statusSrc.querySelectorAll('option').forEach(function(o) {
+                            statusOpts += '<option value="' + o.value + '">' + o.textContent + '</option>';
+                        });
+                    }
+
+                    var inpStyle = 'width:100%;min-width:90px;padding:2px 4px;border:none;border-bottom:1px solid #cbd5e1;border-right:1px solid rgba(203,213,225,0.4);border-radius:0;font-size:12px;background:transparent;';
+                    var inpFocusStyle = "this.style.borderBottomColor='#1c4a7a';this.style.background='#f1f5f9';";
+                    var inpBlurStyle = "this.style.borderBottomColor='#cbd5e1';this.style.background='transparent';";
+
+                    function makeRow() {
+                        if (rowIndex >= maxRows) return;
+                        var tr = document.createElement('tr');
+                        tr.id = 'bulk-row-' + rowIndex;
+                        var n = rowIndex + 1;
+                        var onFocus = ' onfocus="' + inpFocusStyle + '"';
+                        var onBlur = ' onblur="' + inpBlurStyle + '"';
+
+                        var cells = [
+                            '<td style="text-align:center;font-weight:600;color:#94a3b8;padding:2px 4px;">' + n + '</td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="first_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="middle_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="last_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="date" name="date_of_birth_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><select name="gender_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '><option value="">--</option><option value="M">M</option><option value="F">F</option></select></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="religion_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="nationality_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="birth_district_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="subcounty_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="parish_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="village_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="phone_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="email" name="email_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="father_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="father_phone_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="mother_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="mother_phone_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="sponsor_name_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="former_school_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="former_school_district_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><select name="course_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '>' + courseOpts + '</select></td>',
+                            '<td style="padding:1px 2px;"><select name="intake_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '>' + intakeOpts + '</select></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="year_of_admission_' + rowIndex + '" placeholder="2026" style="' + inpStyle + 'width:50px;"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><input type="text" name="NSIN_' + rowIndex + '" style="' + inpStyle + 'width:65px;"' + onFocus + onBlur + '></td>',
+                            '<td style="padding:1px 2px;"><select name="status_' + rowIndex + '" style="' + inpStyle + '"' + onFocus + onBlur + '>' + statusOpts + '</select></td>',
+                            '<td style="text-align:center;padding:2px 4px;white-space:nowrap;"><span data-remove="' + rowIndex + '" style="color:#dc3545;cursor:pointer;font-size:11px;text-decoration:underline;white-space:nowrap;">remove</span></td>'
+                        ];
+
+                        tr.innerHTML = cells.join('');
+                        tr.style.borderBottom = '1px solid #e2e8f0';
+                        tr.style.height = '24px';
+                        if (n % 2 === 0) tr.style.background = '#f8fafc';
+
+                        var removeLink = tr.querySelector('span[data-remove]');
+                        if (removeLink) {
+                            removeLink.addEventListener('click', function() {
+                                tr.remove();
+                                updateCounter();
+                            });
+                        }
+
+                        rowIndex++;
+                        updateCounter();
+                        return tr;
+                    }
+
+                    function updateCounter() {
+                        var c = document.getElementById('bulk-table-body').rows.length;
+                        document.getElementById('bulk-row-counter').textContent = c + ' row' + (c !== 1 ? 's' : '');
+                    }
+
+                    var addRowBtn = document.getElementById('bulk-add-row-btn');
+                    if (addRowBtn) {
+                        addRowBtn.addEventListener('click', function() {
+                            var tbody = document.getElementById('bulk-table-body');
+                            if (tbody) tbody.appendChild(makeRow());
+                        });
+                    }
+
+                    var tbody = document.getElementById('bulk-table-body');
+                    if (tbody) {
+                        for (var i = 0; i < 5; i++) {
+                            tbody.appendChild(makeRow());
                         }
                     }
+
+                    var submitBtn = document.getElementById('bulk-submit-btn');
+                    if (submitBtn) {
+                        submitBtn.addEventListener('click', function() {
+                            var rows = document.getElementById('bulk-table-body').querySelectorAll('tr');
+                            var formData = new FormData();
+                            formData.append('row_count', rowIndex);
+
+                            rows.forEach(function(row) {
+                                var inputs = row.querySelectorAll('input, select');
+                                inputs.forEach(function(inp) {
+                                    if (inp.name) formData.append(inp.name, inp.value);
+                                });
+                            });
+
+                            var btn = document.getElementById('bulk-submit-btn');
+                            var msgDiv = document.getElementById('bulk-messages');
+                            btn.disabled = true;
+                            btn.textContent = 'Saving...';
+                            msgDiv.innerHTML = '';
+
+                            fetch(bulkUrl, {
+                                method: 'POST',
+                                body: formData,
+                                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                btn.disabled = false;
+                                btn.textContent = 'Save All Applications';
+                                if (data.success) {
+                                    var html = '<div style="padding:10px 12px;border-radius:6px;font-size:13px;margin-bottom:8px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;">';
+                                    html += '<strong>Success!</strong> Added ' + data.created_count + ' application(s).';
+                                    if (data.error_count) {
+                                        html += '<br><br><strong>Errors (' + data.error_count + '):</strong><br>' + data.errors.join('<br>');
+                                    }
+                                    html += '</div>';
+                                    msgDiv.innerHTML = html;
+                                    if (data.created_count > 0) {
+                                        setTimeout(function() { window.location.reload(); }, 2000);
+                                    }
+                                } else {
+                                    msgDiv.innerHTML = '<div style="padding:10px 12px;border-radius:6px;font-size:13px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;">' + (data.error || 'Unknown error') + '</div>';
+                                }
+                            })
+                            .catch(function(err) {
+                                btn.disabled = false;
+                                btn.textContent = 'Save All Applications';
+                                msgDiv.innerHTML = '<div style="padding:10px 12px;border-radius:6px;font-size:13px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;">Error: ' + err.message + '</div>';
+                            });
+                        });
+                    }
+
+                    var cancelBtn = document.getElementById('bulk-cancel-btn');
+                    if (cancelBtn) {
+                        cancelBtn.addEventListener('click', closeBulkModal);
+                    }
                 }
-                return v;
+
+                bulkBtn.addEventListener('click', openBulkModal);
+                bulkOverlay.addEventListener('click', closeBulkModal);
+                document.getElementById('bulk-close-x').addEventListener('click', closeBulkModal);
             }
         });
     </script>
 {% endblock %}
 
 {% block object-tools-items %}
-    <!-- Import button added via JS above -->
     {{ block.super }}
+    <li>
+        <a href="{% url 'admin:download_application_template' %}" style="background-color:#28a745;color:#fff;">
+            Download Template
+        </a>
+    </li>
 {% endblock %}

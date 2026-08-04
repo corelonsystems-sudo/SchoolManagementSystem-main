@@ -7,6 +7,7 @@ from django.shortcuts import redirect  # Add this
 
 urlpatterns = [
     path('', lambda request: redirect('admin:index')),  # Redirect root to admin
+    path('portal/', include('admissions.urls')),
     path('jet/', include('jet.urls', 'jet')),
     path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     path('admin/dashboard-stats/', SchoolManagementSystem.admin.dashboard_stats, name='dashboard_stats'),
